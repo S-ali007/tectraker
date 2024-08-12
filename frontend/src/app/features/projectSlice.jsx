@@ -1,52 +1,12 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { v4 as uuidv4 } from "uuid";
 
-const loadStateFromLocalStorage = () => {
-  try {
-    const serializedState = localStorage.getItem("projectState");
-    if (serializedState === null) {
-      return undefined;
-    }
-    return JSON.parse(serializedState);
-  } catch (err) {
-    console.error("Failed to load state from localStorage:", err);
-    return undefined;
-  }
+const initialState = {
+  currentStep: "general",
+  projectName: "",
+  teamMembers: [{ id: "", name: "", email: "", role: "worker" }],
+  projects: [],
+  currentProjectId: null,
 };
-
-const saveStateToLocalStorage = (state) => {
-  try {
-    const serializedState = JSON.stringify(state);
-    localStorage.setItem("projectState", serializedState);
-  } catch (err) {
-    console.error("Failed to save state to localStorage:", err);
-  }
-};
-
-const initializeState = () => {
-  const loadedState = loadStateFromLocalStorage();
-  if (loadedState) {
-    return {
-      ...loadedState,
-      teamMembers: loadedState.teamMembers || [
-        { id: uuidv4(), name: "", email: "", role: "worker" },
-      ],
-      currentStep: loadedState.currentStep || "general",
-      projectName: loadedState.projectName || "",
-      projects: loadedState.projects || [],
-      currentProjectId: loadedState.currentProjectId || null,
-    };
-  }
-  return {
-    currentStep: "general",
-    projectName: "",
-    teamMembers: [{ id: uuidv4(), name: "", email: "", role: "worker" }],
-    projects: [],
-    currentProjectId: null,
-  };
-};
-
-const initialState = initializeState();
 
 const projectSlice = createSlice({
   name: "project",
@@ -54,11 +14,9 @@ const projectSlice = createSlice({
   reducers: {
     setCurrentStep(state, action) {
       state.currentStep = action.payload;
-      saveStateToLocalStorage(state);
     },
     setProjectName(state, action) {
       state.projectName = action.payload;
-      saveStateToLocalStorage(state);
     },
     addTeamMember(state, action) {
       if (state.currentProjectId && typeof action.payload === "object") {
@@ -67,19 +25,18 @@ const projectSlice = createSlice({
         );
         if (project) {
           project.teamMembers.push(action.payload);
-          saveStateToLocalStorage(state);
         }
       } else {
         state.teamMembers.push(action.payload);
-        saveStateToLocalStorage(state);
       }
     },
     setTeamMembers(state, action) {
       state.teamMembers = action.payload;
     },
     addProject(state, action) {
+      const { projectName, id } = action.payload;
       const existingProjectIndex = state.projects.findIndex(
-        (project) => project.name === action.payload.projectName
+        (project) => project.name === projectName
       );
       if (existingProjectIndex > -1) {
         state.projects[existingProjectIndex] = {
@@ -88,20 +45,19 @@ const projectSlice = createSlice({
         };
         state.currentProjectId = state.projects[existingProjectIndex].id;
       } else {
-        const newProject = { ...action.payload, id: uuidv4(), teamMembers: [] };
+        const newProject = { ...action.payload, teamMembers: [] };
         state.projects.push(newProject);
-        state.currentProjectId = newProject.id;
+        state.currentProjectId = id;
       }
-      saveStateToLocalStorage(state);
     },
     resetProject(state) {
       state.currentStep = "general";
       state.projectName = "";
-      state.teamMembers = [
-        { id: uuidv4(), name: "", email: "", role: "worker" },
-      ];
+      state.teamMembers = [{ id: "", name: "", email: "", role: "worker" }];
       state.currentProjectId = null;
-      saveStateToLocalStorage(state);
+    },
+    setAllProjects(state, action) {
+      state.projects = action.payload;
     },
   },
 });
@@ -113,6 +69,7 @@ export const {
   setTeamMembers,
   addProject,
   resetProject,
+  setAllProjects,
 } = projectSlice.actions;
 
 export default projectSlice.reducer;

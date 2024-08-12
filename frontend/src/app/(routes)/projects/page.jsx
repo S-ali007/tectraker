@@ -1,39 +1,98 @@
 "use client";
 import Link from "next/link";
-import React from "react";
-import { useSelector } from "react-redux";
-import { useSearchParams } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useRouter, useSearchParams } from "next/navigation";
+import api from "@/api";
+import { resetProject, setAllProjects } from "@/app/features/projectSlice";
+import toast from "react-hot-toast";
 
 function ProjectListPage() {
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab");
+  const sortBy = searchParams.get("sortBy") || "name";
+  const sortOrder = searchParams.get("sortOrder") || "asc";
+  const dispatch = useDispatch();
+  const router = useRouter();
 
-  const projects = useSelector((state) => state.project.projects);
+  const { projects, currentProjectId } = useSelector((state) => state.project);
+
+  useEffect(() => {
+    const fetchProject = async () => {
+      if (tab === "active") {
+        const data = JSON.parse(localStorage.getItem("userData"));
+        const token = data?.accessToken;
+
+        try {
+          const response = await api.get(
+            `/api/v1/project/projects?tab=active&sortBy=${sortBy}&sortOrder=${sortOrder}`,
+            {
+              headers: {
+                Authorization: token,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          if (response) {
+            const projectAll = response.data;
+            dispatch(setAllProjects(projectAll));
+          }
+        } catch (error) {
+          toast.error(error?.response?.data?.errors || "An error occurred");
+        }
+      }
+    };
+
+    fetchProject();
+  }, [tab, sortBy, sortOrder, dispatch, currentProjectId]);
+
+  const handleSort = (field) => {
+    const newSortOrder =
+      sortBy === field && sortOrder === "asc" ? "desc" : "asc";
+    console.log(newSortOrder, "order", field, "field");
+    router.push(
+      `/projects?tab=active&sortBy=${field}&sortOrder=${newSortOrder}`
+    );
+  };
+
+  const orderByName = () => handleSort("name");
+  const orderByCreation = () => handleSort("created_at");
+
+  const formatDate = (dateString) => {
+    const options = { month: "long", day: "numeric" };
+    return new Date(dateString).toLocaleDateString("en-GB", options);
+  };
+
+  const handleCreateNew = () => {
+    dispatch(resetProject());
+    router.push("/projects/create?step=general");
+  };
 
   return (
     <div className="max-w-[1440px] w-full px-[50px] py-[32px]">
       <div className="w-full flex">
         <h1 className="w-full text-[21px] leading-[28px]">Projects</h1>
-        <Link
-          href={`/projects/create?step=general`}
+        <button
+          onClick={handleCreateNew}
           className="w-full bg-[#00C386] text-[#fff] text-center max-w-[104px] px-[10px] text-[13px] leading-[16px] py-[10px] rounded-[5px]"
         >
           New Project
-        </Link>
+        </button>
       </div>
 
       <div className="w-full py-[32px]">
-        <div className="max-w-[694px] w-full flex gap-[30px] text-[#404040] text-[15px] leading-[15px] font-[600]">
+        <div className="max-w-[694px] w-full   flex gap-[30px] text-[#404040] text-[15px] leading-[15px] font-[600]">
           <Link
-            href={"/projects?tab=active"}
+            href={"/projects?tab=active&sort-by=project-name&sort-order=asc"}
             className={`pb-[5px] ${
               tab === "active" && "border-b-[#004F98] border-b-[2px]"
             }`}
           >
-            Active
+            Active {projects.length > 0 ? `(${projects.length})` : ""}
           </Link>
           <Link
-            href={"/projects?tab=archive"}
+            href={"/projects?tab=archive&sort-by=project-name&sort-order=asc"}
             className={`pb-[5px] ${
               tab === "archive" && "border-b-[#004F98] border-b-[2px]"
             }`}
@@ -43,59 +102,20 @@ function ProjectListPage() {
         </div>
         {projects.length != 0 && tab == "active" && (
           <div className="block w-full">
-            <ul class=" flex justify-between text-[14px] text-gray-400 mt-[40px] pb-[15px]  border-b border-[#e6e9ed]">
-              <div className="flex items-center  gap-[50px]  ">
-                <li className="flex items-center gap-[10px]">
-                  <button
-                    title="Ascending ordering by Name"
-                    type="button"
-                    value="project-name/asc"
-                  >
-                    Name
-                  </button>
-                  <button
-                    title="Ascending ordering by Name"
-                    type="button"
-                    value="project-name/asc"
-                  >
-                    <svg viewBox="0 0 256 256">
-                      <defs></defs>
-                      <g transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
-                        <path
-                          d="M 90 65.75 c 0 0.896 -0.342 1.792 -1.025 2.475 c -1.366 1.367 -3.583 1.367 -4.949 0 L 45 29.2 L 5.975 68.225 c -1.367 1.367 -3.583 1.367 -4.95 0 c -1.366 -1.367 -1.366 -3.583 0 -4.95 l 41.5 -41.5 c 1.366 -1.367 3.583 -1.367 4.949 0 l 41.5 41.5 C 89.658 63.958 90 64.854 90 65.75 z"
-                          transform=" matrix(1 0 0 1 0 0) "
-                          stroke-linecap="round"
-                        />
-                      </g>
-                    </svg>{" "}
-                    <svg width="6px" height="3px"></svg>
-                    <svg viewBox="0 0 256 256">
-                      <defs></defs>
-                      <g transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
-                        <path
-                          d="M 90 24.25 c 0 -0.896 -0.342 -1.792 -1.025 -2.475 c -1.366 -1.367 -3.583 -1.367 -4.949 0 L 45 60.8 L 5.975 21.775 c -1.367 -1.367 -3.583 -1.367 -4.95 0 c -1.366 1.367 -1.366 3.583 0 4.95 l 41.5 41.5 c 1.366 1.367 3.583 1.367 4.949 0 l 41.5 -41.5 C 89.658 26.042 90 25.146 90 24.25 z"
-                          transform=" matrix(1 0 0 1 0 0) "
-                          stroke-linecap="round"
-                        />
-                      </g>
-                    </svg>
-                    <svg width="6px" height="3px"></svg>
-                  </button>
-                </li>
+            <ul class=" flex justify-between text-[14px] pl-[10px] text-gray-400 mt-[40px] pb-[15px]  border-b border-[#e6e9ed]">
+              <div className="flex items-center  w-full gap-[30px]">
+                {/* name */}
 
-                <li className="flex items-center gap-[10px]">
-                  <button
-                    title="Ascending ordering by Creation Date"
-                    type="button"
-                    value="creation-date/asc"
-                  >
-                    Creation Date
-                  </button>
-                  <button
-                    title="Ascending ordering by Creation Date"
-                    type="button"
-                    value="creation-date/asc"
-                  >
+                <button
+                  title="Ascending ordering by Name"
+                  type="button"
+                  value="projectname"
+                  className="flex items-center gap-[10px]"
+                  onClick={orderByName}
+                >
+                  Name
+                  <div className="max-w-[8px] w-full ">
+                    {" "}
                     <svg viewBox="0 0 256 256">
                       <defs></defs>
                       <g transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
@@ -118,11 +138,46 @@ function ProjectListPage() {
                       </g>
                     </svg>
                     <svg width="6px" height="3px"></svg>
-                  </button>
-                </li>
+                  </div>
+                </button>
+
+                {/* created date */}
+                <button
+                  title="Ascending ordering by Creation Date"
+                  type="button"
+                  value="creationdate"
+                  onClick={orderByCreation}
+                  className="flex items-center gap-[10px] max-w-[105px] w-full"
+                >
+                  Creation Date
+                  <div className="max-w-[5px] w-full ">
+                    <svg viewBox="0 0 256 256">
+                      <defs></defs>
+                      <g transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
+                        <path
+                          d="M 90 65.75 c 0 0.896 -0.342 1.792 -1.025 2.475 c -1.366 1.367 -3.583 1.367 -4.949 0 L 45 29.2 L 5.975 68.225 c -1.367 1.367 -3.583 1.367 -4.95 0 c -1.366 -1.367 -1.366 -3.583 0 -4.95 l 41.5 -41.5 c 1.366 -1.367 3.583 -1.367 4.949 0 l 41.5 41.5 C 89.658 63.958 90 64.854 90 65.75 z"
+                          transform=" matrix(1 0 0 1 0 0) "
+                          stroke-linecap="round"
+                        />
+                      </g>
+                    </svg>{" "}
+                    <svg width="6px" height="3px"></svg>
+                    <svg viewBox="0 0 256 256">
+                      <defs></defs>
+                      <g transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
+                        <path
+                          d="M 90 24.25 c 0 -0.896 -0.342 -1.792 -1.025 -2.475 c -1.366 -1.367 -3.583 -1.367 -4.949 0 L 45 60.8 L 5.975 21.775 c -1.367 -1.367 -3.583 -1.367 -4.95 0 c -1.366 1.367 -1.366 3.583 0 4.95 l 41.5 41.5 c 1.366 1.367 3.583 1.367 4.949 0 l 41.5 -41.5 C 89.658 26.042 90 25.146 90 24.25 z"
+                          transform=" matrix(1 0 0 1 0 0) "
+                          stroke-linecap="round"
+                        />
+                      </g>
+                    </svg>
+                    <svg width="6px" height="3px"></svg>
+                  </div>
+                </button>
               </div>
-
-              <div className="flex items-center gap-[150px] ">
+              <div className="flex items-center gap-[150px] pr-[25px]">
+                {/* team */}
                 <li className="flex items-center gap-[10px]">
                   <button
                     title="Ascending ordering by Team"
@@ -160,6 +215,7 @@ function ProjectListPage() {
                     <svg width="6px" height="3px"></svg>
                   </button>
                 </li>
+                {/* actions */}
                 <li>
                   <span>Actions</span>
                   <div></div>
@@ -169,11 +225,11 @@ function ProjectListPage() {
             {projects.map((item, id) => (
               <div
                 key={id}
-                className="max-w-[1354px] w-full p-[10px] border-b border-[#e6e9ed] "
+                className="max-w-[1354px] w-full p-[10px] border-b border-[#e6e9ed]  flex"
               >
                 <Link
-                  href={`/projects/${item.id}`}
-                  className="flex items-center gap-[30px]"
+                  href={`/projects/edit?id=${item._id}`}
+                  className="flex items-center gap-[30px] w-full"
                 >
                   <div class="project_icon bg-[#c2c7cd] max-w-[40px] w-full flex justify-center items-center p-2 rounded-[50%]">
                     <svg
@@ -203,13 +259,29 @@ function ProjectListPage() {
                     </svg>
                   </div>
                   <div>
-                    <h1 className="text-[17px] text-[#404040]">
-                      {item.projectName}
-                    </h1>
+                    <h1 className="text-[17px] text-[#404040]">{item.name}</h1>
 
-                    <p className="text-[11px] text-[#acb3bb]">created on</p>
+                    <p className="text-[11px] text-[#acb3bb]">
+                      created on {formatDate(item.createdAt)}
+                    </p>
                   </div>
                 </Link>
+
+                <div className="max-w-[250px] w-full flex justify-between ">
+                  {/* team members */}
+                  <div className="max-w-[50px] w-full flex items-center gap-1 text-[14px] text-[#404040]">
+                    <svg width="15px" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M15.8 21C15.8 21.3866 16.1134 21.7 16.5 21.7C16.8866 21.7 17.2 21.3866 17.2 21H15.8ZM4.8 21C4.8 21.3866 5.1134 21.7 5.5 21.7C5.8866 21.7 6.2 21.3866 6.2 21H4.8ZM6.2 18C6.2 17.6134 5.8866 17.3 5.5 17.3C5.1134 17.3 4.8 17.6134 4.8 18H6.2ZM12.3 21C12.3 21.3866 12.6134 21.7 13 21.7C13.3866 21.7 13.7 21.3866 13.7 21H12.3ZM13.7 18C13.7 17.6134 13.3866 17.3 13 17.3C12.6134 17.3 12.3 17.6134 12.3 18H13.7ZM11.7429 11.3125L11.3499 10.7333L11.3499 10.7333L11.7429 11.3125ZM16.2429 11.3125L15.8499 10.7333L15.8499 10.7333L16.2429 11.3125ZM3.2 21V19.5H1.8V21H3.2ZM8 14.7H11V13.3H8V14.7ZM15.8 19.5V21H17.2V19.5H15.8ZM11 14.7C13.651 14.7 15.8 16.849 15.8 19.5H17.2C17.2 16.0758 14.4242 13.3 11 13.3V14.7ZM3.2 19.5C3.2 16.849 5.34903 14.7 8 14.7V13.3C4.57583 13.3 1.8 16.0758 1.8 19.5H3.2ZM11 14.7H15.5V13.3H11V14.7ZM20.3 19.5V21H21.7V19.5H20.3ZM15.5 14.7C18.151 14.7 20.3 16.849 20.3 19.5H21.7C21.7 16.0758 18.9242 13.3 15.5 13.3V14.7ZM6.2 21V18H4.8V21H6.2ZM13.7 21V18H12.3V21H13.7ZM9.5 11.3C7.67746 11.3 6.2 9.82255 6.2 8.00001H4.8C4.8 10.5958 6.90426 12.7 9.5 12.7V11.3ZM6.2 8.00001C6.2 6.17746 7.67746 4.7 9.5 4.7V3.3C6.90426 3.3 4.8 5.40427 4.8 8.00001H6.2ZM9.5 4.7C11.3225 4.7 12.8 6.17746 12.8 8.00001H14.2C14.2 5.40427 12.0957 3.3 9.5 3.3V4.7ZM12.8 8.00001C12.8 9.13616 12.2264 10.1386 11.3499 10.7333L12.1358 11.8918C13.3801 11.0477 14.2 9.61973 14.2 8.00001H12.8ZM11.3499 10.7333C10.8225 11.091 10.1867 11.3 9.5 11.3V12.7C10.4757 12.7 11.3839 12.4019 12.1358 11.8918L11.3499 10.7333ZM14 4.7C15.8225 4.7 17.3 6.17746 17.3 8.00001H18.7C18.7 5.40427 16.5957 3.3 14 3.3V4.7ZM17.3 8.00001C17.3 9.13616 16.7264 10.1386 15.8499 10.7333L16.6358 11.8918C17.8801 11.0477 18.7 9.61973 18.7 8.00001H17.3ZM15.8499 10.7333C15.3225 11.091 14.6867 11.3 14 11.3V12.7C14.9757 12.7 15.8839 12.4019 16.6358 11.8918L15.8499 10.7333ZM11.9378 5.42349C12.5029 4.97049 13.2189 4.7 14 4.7V3.3C12.8892 3.3 11.8667 3.68622 11.0622 4.33114L11.9378 5.42349ZM14 11.3C13.3133 11.3 12.6775 11.091 12.1501 10.7333L11.3642 11.8918C12.1161 12.4019 13.0243 12.7 14 12.7V11.3Z"
+                        fill="#c2c7cd"
+                      />
+                    </svg>
+                    {item.teamMembers.length > 0
+                      ? `${item.teamMembers.length}`
+                      : "0"}
+                  </div>
+                  <div className="max-w-[50px] w-full">action</div>
+                </div>
               </div>
             ))}
           </div>

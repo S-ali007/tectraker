@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
-  addTeamMember,
   resetProject,
   setCurrentStep,
   setProjectName,
@@ -13,24 +12,47 @@ import { useRouter, useSearchParams } from "next/navigation";
 import "react-toastify/dist/ReactToastify.css";
 import api from "@/api";
 import toast, { Toaster } from "react-hot-toast";
-import { v4 as uuidv4 } from "uuid";
 
 const ProjectPage = () => {
   const searchParams = useSearchParams();
+  const projectId = searchParams.get("id");
   const tab = searchParams.get("step") || "general";
   const steps = [{ step: "general" }, { step: "invite-team" }];
   const dispatch = useDispatch();
-  const { currentStep, projectName, projects, currentProjectId, teamMembers } =
-    useSelector((state) => state.project);
+  const { projectName, teamMembers } = useSelector((state) => state.project);
   const [emailError, setEmailError] = useState(false);
   const router = useRouter();
-
   useEffect(() => {
-    const storedProjectName = localStorage.getItem("user");
-    if (storedProjectName) {
-      dispatch(setProjectName(storedProjectName));
-    }
-  }, [dispatch]);
+    const fetchProjectDetails = async () => {
+      if (projectId) {
+        try {
+          const data = JSON.parse(localStorage.getItem("userData"));
+          const token = data?.accessToken;
+          const response = await api.get(`/api/v1/project/${projectId}`, {
+            headers: {
+              Authorization: token,
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (response.data && response.data.data) {
+            const projectNameFromApi = response.data.data.project.name;
+            dispatch(setProjectName(projectNameFromApi));
+          }
+        } catch (error) {
+          console.error("Failed to fetch project details", error);
+          toast.error(error, "Failed to load project details");
+        }
+      } else {
+        const storedProjectName = localStorage.getItem("user");
+        if (storedProjectName) {
+          dispatch(resetProject());
+        }
+      }
+    };
+
+    fetchProjectDetails();
+  }, [dispatch, projectId]);
 
   const handleProjectNameChange = (e) => {
     dispatch(setProjectName(e.target.value));
@@ -42,7 +64,7 @@ const ProjectPage = () => {
       const data = JSON.parse(localStorage.getItem("userData"));
       const token = data?.accessToken;
 
-      if (!currentProjectId) {
+      if (!projectId) {
         dispatch(setCurrentStep("invite-team"));
         try {
           const response = await api.post(
@@ -55,21 +77,47 @@ const ProjectPage = () => {
               },
             }
           );
-          console.log(response, "ssssssssss");
+
           if (response) {
-            dispatch(addProject({ projectName, id: uuidv4() }));
+            const newProjectId = response.data.data.project._id;
+            dispatch(addProject({ projectName, id: newProjectId }));
             toast.success("Project Created Successfully");
-            router.push("/projects/create?step=invite-team");
+            router.push(`/projects/create?id=${newProjectId}&step=invite-team`);
           }
         } catch (error) {
           toast.error(error?.response?.data?.errors || "An error occurred");
         }
       } else {
-        dispatch(setCurrentStep("invite-team"));
-        router.push("/projects/create?step=invite-team");
+        handleUpdateProject();
       }
     } else if (tab === "invite-team") {
       handleFinish();
+    }
+  };
+
+  const handleUpdateProject = async () => {
+    const data = JSON.parse(localStorage.getItem("userData"));
+    const token = data?.accessToken;
+
+    try {
+      const response = await api.put(
+        `/api/v1/project/${projectId}`,
+        { name: projectName },
+        {
+          headers: {
+            Authorization: token,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response) {
+        toast.success("Project Updated Successfully");
+        dispatch(setCurrentStep("invite-team"));
+        router.push(`/projects/edit?id=${projectId}&step=invite-team`);
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.errors || "An error occurred");
     }
   };
 
@@ -84,7 +132,7 @@ const ProjectPage = () => {
     dispatch(
       setTeamMembers([
         ...teamMembers,
-        { id: uuidv4(), name: "", email: "", role: "worker" },
+        { id: "", name: "", email: "", role: "worker" },
       ])
     );
   };
@@ -95,7 +143,7 @@ const ProjectPage = () => {
     }
   };
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
     const hasEmptyFields = teamMembers.some(
       (member) => !member.name || !member.email
     );
@@ -104,26 +152,52 @@ const ProjectPage = () => {
       return;
     }
 
-    dispatch(setTeamMembers(teamMembers));
-    toast.success("Team Members Added Successfully");
-    dispatch(resetProject());
-    router.push("/projects?tab=active");
+    const data = JSON.parse(localStorage.getItem("userData"));
+    const token = data?.accessToken;
+
+    if (!hasEmptyFields) {
+      try {
+        const response = await api.put(
+          `/api/v1/project/${projectId}/team-members`,
+          { teamMembers },
+          {
+            headers: {
+              Authorization: token,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (response.data && response.data.data) {
+          dispatch(
+            setTeamMembers(response.data.data.project.teamMembers || [])
+          );
+        }
+
+        toast.success("Team Members Added Successfully");
+        dispatch(resetProject());
+        router.push("/projects?tab=active&sortBy=name&sortOrder=asc");
+      } catch (error) {
+        console.error("Failed to add team members", error);
+        toast.error("Failed to add team members");
+      }
+    }
   };
 
   const handleCancel = () => {
     dispatch(resetProject());
-    router.push("/projects?tab=active");
+    router.push("/projects?tab=active&sortBy=name&sortOrder=asc");
   };
 
   const handleSetting = () => {
-    router.push("/projects/create?step=general");
+    router.push(`/projects/edit?id=${projectId}`);
   };
 
   return (
     <div className="max-w-[1440px] w-full">
       <div className="w-full bg-[#f3f6fa] px-[50px] py-[32px]">
         <h1 className="text-[21px] leading-[28px] font-[600]">
-          Start New Project
+          {projectId ? "Update Project" : "Start New Project"}
         </h1>
         <h2 className="w-full min-h-6">{projectName}</h2>
         <ol className="ml-[15px] flex max-w-[200px] w-full gap-[40px] text-[15px] leading-[15px] list-decimal mt-[100px]">
@@ -162,7 +236,6 @@ const ProjectPage = () => {
           </p>
 
           {teamMembers.map((member, index) => {
-            console.log("Rendering member:", member);
             return (
               <div
                 key={member.id}
@@ -254,7 +327,7 @@ const ProjectPage = () => {
               projectName === "" ? "opacity-50" : "opacity-100"
             }`}
           >
-            {tab === "general" ? "Create and Go To Next" : "Send Invitations"}
+            {projectId ? "Update and Go To Next" : "Create and Go To Next"}
           </button>
         </div>
       </div>

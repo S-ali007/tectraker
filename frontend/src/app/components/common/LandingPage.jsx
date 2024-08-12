@@ -9,7 +9,6 @@ import "react-toastify/dist/ReactToastify.css";
 function LandingPage() {
   const router = useRouter();
   const path = usePathname();
-  const searchParams = useSearchParams();
 
   if (path == "/login" || path == "/signup" || path == "/verifyemail") {
     return null;
@@ -19,7 +18,7 @@ function LandingPage() {
     {
       id: 0,
       title: "Projects",
-      link: "/projects?tab=active&sort-by=project-name",
+      link: "/projects?tab=active&sort-by=name&sort-order=asc",
       svg: (
         <svg
           width="28"
