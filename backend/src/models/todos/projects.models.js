@@ -42,6 +42,7 @@ const projectSchema = new Schema(
     engagement_ids: [Number],
     pending: Boolean,
     archived_at: Date,
+    isArchived: { type: Boolean, default: false },
     currency: String,
     pending_invitation_ids: [Number],
     invoicing_schedule: {

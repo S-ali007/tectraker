@@ -18,17 +18,25 @@ const createProject = asyncHandler(async (req, res) => {
 
 const getAllProjects = asyncHandler(async (req, res) => {
   try {
-    const { sortBy, sortOrder } = req.query;
+    const { sortBy, sortOrder, tab } = req.query;
 
     let sortCriteria = {};
     if (sortBy === "name" || sortBy === "created_at") {
       sortCriteria[sortBy] = sortOrder === "asc" ? 1 : -1;
     }
-    const projects = await Project.find().sort(sortCriteria);
+
+    let filter = {};
+    if (tab === "archive") {
+      filter.isArchived = true;
+    } else if (tab === "active") {
+      filter.isArchived = false;
+    }
+
+    const projects = await Project.find(filter).sort(sortCriteria);
 
     res.status(200).json(projects);
   } catch (error) {
-    console.log(error, "error");
+    console.log("Error fetching projects:", error);
     res.status(500).json(new ApiError(500, "Server error"));
   }
 });
@@ -103,6 +111,28 @@ const deleteProject = async (req, res) => {
   }
 };
 
+const archiveProject = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const project = await Project.findById(id);
+
+    if (!project) {
+      return res.status(404).json(new ApiError(404, "Project not found"));
+    }
+
+    project.isArchived = true;
+    await project.save();
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, { project }, "Project Archived Successfully"));
+  } catch (error) {
+    console.log(error);
+    res.status(500).json(new ApiError(500, "Server error"));
+  }
+});
+
 module.exports = {
   createProject,
   getAllProjects,
@@ -110,4 +140,5 @@ module.exports = {
   updateProject,
   deleteProject,
   updateTeamMembers,
+  archiveProject,
 };

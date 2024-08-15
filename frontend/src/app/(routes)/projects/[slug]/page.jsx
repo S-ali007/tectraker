@@ -144,10 +144,14 @@ const ProjectPage = () => {
   };
 
   const handleFinish = async () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     const hasEmptyFields = teamMembers.some(
-      (member) => !member.name || !member.email
+      (member) => !member.name || !emailRegex.test(member.email)
     );
+
     if (hasEmptyFields) {
+      console.log(hasEmptyFields);
       setEmailError(true);
       return;
     }

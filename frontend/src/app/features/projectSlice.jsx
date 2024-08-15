@@ -6,6 +6,7 @@ const initialState = {
   teamMembers: [{ id: "", name: "", email: "", role: "worker" }],
   projects: [],
   currentProjectId: null,
+  archiveProjects: [],
 };
 
 const projectSlice = createSlice({
@@ -59,6 +60,9 @@ const projectSlice = createSlice({
     setAllProjects(state, action) {
       state.projects = action.payload;
     },
+    setAllArchiveProjects(state, action) {
+      state.archiveProjects = action.payload;
+    },
   },
 });
 
@@ -69,6 +73,7 @@ export const {
   setTeamMembers,
   addProject,
   resetProject,
+  setAllArchiveProjects,
   setAllProjects,
 } = projectSlice.actions;
 

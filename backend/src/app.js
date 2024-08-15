@@ -17,11 +17,9 @@ app.use(
 app.use(express.static("public"));
 app.use(cookieParser());
 
-// routes
 const userRouter = require("./routes/user.routes.js");
 const projectsRoute = require("./routes/projects.routes.js");
 
-// route declaration
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/project", projectsRoute);
 

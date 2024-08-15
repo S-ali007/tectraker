@@ -18,7 +18,7 @@ function LandingPage() {
     {
       id: 0,
       title: "Projects",
-      link: "/projects?tab=active&sort-by=name&sort-order=asc",
+      link: "/projects?tab=active&sortBy=name&sortOrder=asc",
       svg: (
         <svg
           width="28"
