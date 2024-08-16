@@ -10,6 +10,9 @@ import {
   setAllProjects,
 } from "@/app/features/projectSlice";
 import toast from "react-hot-toast";
+import YesAndNo from "@/app/components/common/YesAndNo";
+import ActiveProjects from "@/assets/icons/ActiveProjects";
+import ArchiveProjects from "@/assets/icons/ArchiveProjects";
 
 function ProjectListPage() {
   const searchParams = useSearchParams();
@@ -20,6 +23,7 @@ function ProjectListPage() {
   const router = useRouter();
   const [activeAction, setActiveAction] = useState(null);
   const [actionArchive, setActionArchive] = useState(false);
+  const [actionDelete, setActionDelete] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const { projects, currentProjectId, archiveProjects } = useSelector(
     (state) => state.project
@@ -61,7 +65,10 @@ function ProjectListPage() {
     setSelectedProjectId(projectId);
     setActionArchive(true);
   };
-
+  const handleDelete = (projectId) => {
+    setSelectedProjectId(projectId);
+    setActionDelete(true);
+  };
   const handleConfirmArchive = async () => {
     const data = JSON.parse(localStorage.getItem("userData"));
     const token = data?.accessToken;
@@ -77,8 +84,11 @@ function ProjectListPage() {
           },
         }
       );
+
       if (response.status === 200) {
         toast.success("Project archived successfully");
+
+        fetchProjects();
         setActionArchive(false);
       }
     } catch (error) {
@@ -86,6 +96,43 @@ function ProjectListPage() {
     }
   };
 
+  const fetchProjects = async () => {
+    try {
+      const response = await api.get(
+        `/api/v1/project/projects?tab=${tab}&sortBy=${sortBy}&sortOrder=${sortOrder}`,
+        {
+          headers: {
+            Authorization: token,
+          },
+        }
+      );
+      const projectAll = response.data;
+      dispatch(setAllProjects(projectAll));
+    } catch (error) {
+      console.error("Failed to fetch projects", error);
+    }
+  };
+
+  const handleDeleteProject = async () => {
+    const data = JSON.parse(localStorage.getItem("userData"));
+    const token = data?.accessToken;
+    try {
+      const response = await api.delete(
+        `/api/v1/project/${selectedProjectId}`,
+        {
+          headers: {
+            Authorization: token,
+          },
+        }
+      );
+      if (response.status === 200) {
+        setActionDelete(false);
+        toast.success("Project Deleted successfully");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
   useEffect(() => {
     document.addEventListener("click", handleClickOutside, true);
     return () => {
@@ -125,11 +172,12 @@ function ProjectListPage() {
       fetchProjects();
     }
   }, [tab, sortBy, sortOrder, dispatch]);
-  console.log(archiveProjects, "lllllllll");
   return (
     <div className="max-w-[1440px] w-full px-[50px] py-[32px]">
       <div className="w-full flex">
-        <h1 className="w-full text-[21px] leading-[28px]">Projects</h1>
+        <h1 className="w-full text-[21px] leading-[24px] font-[700] text-[#404040] ">
+          Projects
+        </h1>
         <button
           onClick={handleCreateNew}
           className="w-full bg-[#00C386] text-[#fff] text-center max-w-[104px] px-[10px] text-[13px] leading-[16px] py-[10px] rounded-[5px]"
@@ -159,43 +207,26 @@ function ProjectListPage() {
           </Link>
         </div>
         {actionArchive && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-800 bg-opacity-50">
-            <div className="bg-white rounded-lg shadow-lg max-w-md w-full">
-              <div className="px-6 py-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-semibold text-gray-900">
-                    Archive this project?
-                  </h3>
-                  <button
-                    onClick={() => setActionArchive(false)}
-                    className="text-[#fff] w-full max-w-[25px] bg-gray-400 rounded-3xl"
-                  >
-                    &times;
-                  </button>
-                </div>
-                <p className="mt-4 text-gray-600">
-                  Archiving this project will hide it and all its related data
-                  from most screens & reports on TopTracker for all users
-                  working on the project. You can fully restore it later from
-                  the archived projects tab.
-                </p>
-              </div>
-              <div className="px-6 py-4 bg-gray-100 flex justify-end">
-                <button
-                  onClick={() => setActionArchive(false)}
-                  className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded mr-2"
-                >
-                  No
-                </button>
-                <button
-                  onClick={handleConfirmArchive}
-                  className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded"
-                >
-                  Yes, Archive Project
-                </button>
-              </div>
-            </div>
-          </div>
+          <YesAndNo
+            heading={"Archive this project?"}
+            para={
+              "Archiving this project will hide it and all its related data from most screens & reports on TopTracker for all users working on the project. You can fully restore it later from the archived projects tab."
+            }
+            yes={handleConfirmArchive}
+            no={() => setActionArchive(false)}
+            action={"archive"}
+          />
+        )}
+        {actionDelete && (
+          <YesAndNo
+            heading={" Delete this project?"}
+            para={
+              " Deleting this project will Delete it and all its related data & reports on TechTracker for all users working on the project.You cannot restore it"
+            }
+            yes={handleDeleteProject}
+            no={() => setActionDelete(false)}
+            action={"delete"}
+          />
         )}
         {projects.length != 0 && tab == "active" && (
           <div className="block w-full">
@@ -416,18 +447,24 @@ function ProjectListPage() {
                             >
                               Edit
                             </Link>
-                            <li className="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer">
+                            <Link
+                              href={`/reports`}
+                              className="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                            >
                               View Report
-                            </li>
+                            </Link>
                             <button
                               onClick={() => handleArchive(item._id)}
                               className=" w-full text-gray-700  px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer items-start flex"
                             >
                               Archive
                             </button>
-                            <li className="text-red-600 block px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer">
+                            <button
+                              onClick={() => handleDelete(item._id)}
+                              className="text-red-600 block px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                            >
                               Delete
-                            </li>
+                            </button>
                           </ul>
                         </div>
                       )}
@@ -440,45 +477,7 @@ function ProjectListPage() {
         )}
         {projects.length === 0 && tab == "active" && (
           <div className="w-full flex flex-col items-center justify-center h-[75vh]">
-            <svg width="224px" height="181px" class="empty-illustration">
-              <g transform="translate(1 1)" fill="none" fill-rule="evenodd">
-                <path
-                  d="M155 158H10.9c-5.5 0-9.9-4.9-9.9-10.4V119m183.7-88.8c0-5.5-4.5-10.2-10-10.2H127v-9.6C127 4.9 122.4 0 116.8 0H68.7c-5.5 0-9.8 4.9-9.8 10.4V20H10.8c-5.5 0-10 4.6-10 10.1"
-                  stroke="#67727a"
-                  stroke-width="2"
-                ></path>
-                <path
-                  d="M138 109H10.9C5.4 109 1 104.5 1 99V30m183.7.4v40.4"
-                  stroke="#67727a"
-                  stroke-width="2"
-                ></path>
-                <circle
-                  cx="184.9"
-                  cy="119"
-                  r="38.2"
-                  fill="#37aa7c"
-                  fill-rule="nonzero"
-                ></circle>
-                <path
-                  d="M184.9 106.3v25.4m12.7-12.7h-25.4"
-                  stroke="#fff"
-                  stroke-width="2"
-                ></path>
-                <path
-                  d="M97.8 124h-10c-2.8 0-5-2.2-5-5V99c0-2.8 2.2-5 5-5h10c2.8 0 5 2.2 5 5v20c0 2.8-2.2 5-5 5z"
-                  fill="#fff"
-                  fill-rule="nonzero"
-                  stroke="#67727a"
-                  stroke-width="2"
-                ></path>
-                <path
-                  d="M54.9 178s1.2-.2 3.3-.4c2.1-.2 5-.5 8.6-.7 1.8-.1 3.7-.3 5.7-.3 2-.1 4.2-.2 6.4-.3 2.2-.1 4.5-.2 6.8-.2s4.7-.1 7.1-.1c2.4 0 4.7 0 7.1.1 2.3 0 4.6.1 6.8.2 2.2 0 4.4.2 6.4.3 2 .1 4 .2 5.7.3 3.6.2 6.5.5 8.6.8 2.1.2 3.3.4 3.3.4s-1.2.2-3.3.4c-2.1.2-5 .5-8.6.8-1.8.1-3.7.3-5.7.3-2 .1-4.2.2-6.4.3-2.2.1-4.5.2-6.8.2s-4.7 0-7.1.1c-2.4 0-4.7 0-7.1-.1-2.3 0-4.6-.1-6.8-.2-2.2 0-4.4-.2-6.4-.3-2-.1-4-.2-5.7-.3-3.6-.2-6.5-.5-8.6-.7-2.1-.4-3.3-.6-3.3-.6z"
-                  fill="#e3eef7"
-                  fill-rule="nonzero"
-                ></path>
-                <path d="M59 20h68" stroke="#67727a" stroke-width="2"></path>
-              </g>
-            </svg>
+            <ActiveProjects />
 
             <div className="max-w-[448px] w-full text-center">
               <h1 className="mt-[80px] text-[16px] leading-[24px] font-[700] text-[#575757]">
@@ -493,65 +492,10 @@ function ProjectListPage() {
         )}
         {tab == "archive" && (
           <div>
-            {archiveProjects.length === 0 && (
+            {archiveProjects.length === 0 ? (
               <div className="w-full flex flex-col items-center justify-center h-[75vh]">
                 <div className="w-full flex flex-col items-center justify-center h-[75vh]">
-                  <svg
-                    width="204.6px"
-                    height="181px"
-                    class="empty-illustration"
-                  >
-                    <g
-                      transform="translate(.4 .1)"
-                      fill="none"
-                      fill-rule="evenodd"
-                    >
-                      <path
-                        d="M154.6 46.5l10 14.1m-164 0l10-14.1"
-                        stroke="#67727a"
-                        stroke-width="2"
-                      ></path>
-                      <path
-                        d="M154.6 60.6V25.9c0-2.8-2.2-5-5-5h-134c-2.8 0-5 2.2-5 5v34.7m134-39.7v-5c0-2.8-2.2-5-5-5h-114c-2.8 0-5 2.2-5 5v5"
-                        stroke="#4d92de"
-                        stroke-width="2"
-                      ></path>
-                      <path
-                        d="M134.6 10.9v-5c0-2.8-2.2-5-5-5h-94c-2.8 0-5 2.2-5 5v5"
-                        stroke="#4d92de"
-                        stroke-width="2"
-                      ></path>
-                      <path
-                        d="M57.6 123v-10c0-2.8 2.2-5 5-5h40c2.8 0 5 2.2 5 5v10c0 2.8-2.2 5-5 5h-40c-2.7 0-5-2.2-5-5z"
-                        fill="#fff"
-                        fill-rule="nonzero"
-                        stroke="#67727a"
-                        stroke-width="2"
-                      ></path>
-                      <circle
-                        cx="164.6"
-                        cy="122.7"
-                        r="38.2"
-                        fill="#4d92de"
-                        fill-rule="nonzero"
-                      ></circle>
-                      <path
-                        d="M44.7 179.1s1.2-.2 3.3-.4c2.1-.2 5-.5 8.6-.7 1.8-.1 3.7-.3 5.7-.3 2-.1 4.2-.2 6.4-.3 2.2-.1 4.5-.2 6.8-.2s4.7-.1 7.1-.1c2.4 0 4.7 0 7.1.1 2.3 0 4.6.1 6.8.2 2.2 0 4.4.2 6.4.3 2 .1 4 .2 5.7.3 3.6.2 6.5.5 8.6.8 2.1.2 3.3.4 3.3.4s-1.2.2-3.3.4c-2.1.2-5 .5-8.6.8-1.8.1-3.7.3-5.7.3-2 .1-4.2.2-6.4.3-2.2.1-4.5.2-6.8.2s-4.7 0-7.1.1c-2.4 0-4.7 0-7.1-.1-2.3 0-4.6-.1-6.8-.2-2.2 0-4.4-.2-6.4-.3-2-.1-4-.2-5.7-.3-3.6-.2-6.5-.5-8.6-.7-2.1-.4-3.3-.6-3.3-.6z"
-                        fill="#e3eef7"
-                        fill-rule="nonzero"
-                      ></path>
-                      <text font-size="36" font-family="Helvetica" fill="#fff">
-                        <tspan x="153.627" y="135">
-                          0
-                        </tspan>
-                      </text>
-                      <path
-                        d="M134.6 160.9h-124c-5.5 0-10-4.5-10-10V60.6h43.9c1.9 0 3.6 1.1 4.5 2.8l5.9 11.7c1.7 3.4 5.2 5.5 8.9 5.5h37.6c3.8 0 7.3-2.1 8.9-5.5l5.9-11.7c.8-1.7 2.6-2.8 4.5-2.8h43.9v15.2"
-                        stroke="#67727a"
-                        stroke-width="2"
-                      ></path>
-                    </g>
-                  </svg>
+                  <ArchiveProjects />
 
                   <div className="max-w-[408px] w-full text-center">
                     <p className="mt-[20px]">
@@ -560,6 +504,127 @@ function ProjectListPage() {
                   </div>
                 </div>
               </div>
+            ) : (
+              <ul class=" flex justify-between text-[14px] pl-[10px] text-gray-400 mt-[40px] pb-[15px]  border-b border-[#e6e9ed]">
+                <div className="flex items-center  w-full gap-[30px]">
+                  {/* name */}
+
+                  <button
+                    title="Ascending ordering by Name"
+                    type="button"
+                    value="projectname"
+                    className="flex items-center gap-[10px]"
+                    onClick={orderByName}
+                  >
+                    Name
+                    <div className="max-w-[8px] w-full ">
+                      {" "}
+                      <svg viewBox="0 0 256 256">
+                        <defs></defs>
+                        <g transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
+                          <path
+                            d="M 90 65.75 c 0 0.896 -0.342 1.792 -1.025 2.475 c -1.366 1.367 -3.583 1.367 -4.949 0 L 45 29.2 L 5.975 68.225 c -1.367 1.367 -3.583 1.367 -4.95 0 c -1.366 -1.367 -1.366 -3.583 0 -4.95 l 41.5 -41.5 c 1.366 -1.367 3.583 -1.367 4.949 0 l 41.5 41.5 C 89.658 63.958 90 64.854 90 65.75 z"
+                            transform=" matrix(1 0 0 1 0 0) "
+                            stroke-linecap="round"
+                          />
+                        </g>
+                      </svg>{" "}
+                      <svg width="6px" height="3px"></svg>
+                      <svg viewBox="0 0 256 256">
+                        <defs></defs>
+                        <g transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
+                          <path
+                            d="M 90 24.25 c 0 -0.896 -0.342 -1.792 -1.025 -2.475 c -1.366 -1.367 -3.583 -1.367 -4.949 0 L 45 60.8 L 5.975 21.775 c -1.367 -1.367 -3.583 -1.367 -4.95 0 c -1.366 1.367 -1.366 3.583 0 4.95 l 41.5 41.5 c 1.366 1.367 3.583 1.367 4.949 0 l 41.5 -41.5 C 89.658 26.042 90 25.146 90 24.25 z"
+                            transform=" matrix(1 0 0 1 0 0) "
+                            stroke-linecap="round"
+                          />
+                        </g>
+                      </svg>
+                      <svg width="6px" height="3px"></svg>
+                    </div>
+                  </button>
+
+                  {/* created date */}
+                  <button
+                    title="Ascending ordering by Creation Date"
+                    type="button"
+                    value="creationdate"
+                    onClick={orderByCreation}
+                    className="flex items-center gap-[10px] max-w-[105px] w-full"
+                  >
+                    Creation Date
+                    <div className="max-w-[5px] w-full ">
+                      <svg viewBox="0 0 256 256">
+                        <defs></defs>
+                        <g transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
+                          <path
+                            d="M 90 65.75 c 0 0.896 -0.342 1.792 -1.025 2.475 c -1.366 1.367 -3.583 1.367 -4.949 0 L 45 29.2 L 5.975 68.225 c -1.367 1.367 -3.583 1.367 -4.95 0 c -1.366 -1.367 -1.366 -3.583 0 -4.95 l 41.5 -41.5 c 1.366 -1.367 3.583 -1.367 4.949 0 l 41.5 41.5 C 89.658 63.958 90 64.854 90 65.75 z"
+                            transform=" matrix(1 0 0 1 0 0) "
+                            stroke-linecap="round"
+                          />
+                        </g>
+                      </svg>{" "}
+                      <svg width="6px" height="3px"></svg>
+                      <svg viewBox="0 0 256 256">
+                        <defs></defs>
+                        <g transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
+                          <path
+                            d="M 90 24.25 c 0 -0.896 -0.342 -1.792 -1.025 -2.475 c -1.366 -1.367 -3.583 -1.367 -4.949 0 L 45 60.8 L 5.975 21.775 c -1.367 -1.367 -3.583 -1.367 -4.95 0 c -1.366 1.367 -1.366 3.583 0 4.95 l 41.5 41.5 c 1.366 1.367 3.583 1.367 4.949 0 l 41.5 -41.5 C 89.658 26.042 90 25.146 90 24.25 z"
+                            transform=" matrix(1 0 0 1 0 0) "
+                            stroke-linecap="round"
+                          />
+                        </g>
+                      </svg>
+                      <svg width="6px" height="3px"></svg>
+                    </div>
+                  </button>
+                </div>
+                <div className="flex items-center gap-[150px] pr-[25px]">
+                  {/* team */}
+                  <li className="flex items-center gap-[10px]">
+                    <button
+                      title="Ascending ordering by Team"
+                      type="button"
+                      value="team-size/asc"
+                    >
+                      Team
+                    </button>
+                    <button
+                      title="Ascending ordering by Team"
+                      type="button"
+                      value="team-size/asc"
+                    >
+                      <svg viewBox="0 0 256 256">
+                        <defs></defs>
+                        <g transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
+                          <path
+                            d="M 90 65.75 c 0 0.896 -0.342 1.792 -1.025 2.475 c -1.366 1.367 -3.583 1.367 -4.949 0 L 45 29.2 L 5.975 68.225 c -1.367 1.367 -3.583 1.367 -4.95 0 c -1.366 -1.367 -1.366 -3.583 0 -4.95 l 41.5 -41.5 c 1.366 -1.367 3.583 -1.367 4.949 0 l 41.5 41.5 C 89.658 63.958 90 64.854 90 65.75 z"
+                            transform=" matrix(1 0 0 1 0 0) "
+                            stroke-linecap="round"
+                          />
+                        </g>
+                      </svg>{" "}
+                      <svg width="6px" height="3px"></svg>
+                      <svg viewBox="0 0 256 256">
+                        <defs></defs>
+                        <g transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
+                          <path
+                            d="M 90 24.25 c 0 -0.896 -0.342 -1.792 -1.025 -2.475 c -1.366 -1.367 -3.583 -1.367 -4.949 0 L 45 60.8 L 5.975 21.775 c -1.367 -1.367 -3.583 -1.367 -4.95 0 c -1.366 1.367 -1.366 3.583 0 4.95 l 41.5 41.5 c 1.366 1.367 3.583 1.367 4.949 0 l 41.5 -41.5 C 89.658 26.042 90 25.146 90 24.25 z"
+                            transform=" matrix(1 0 0 1 0 0) "
+                            stroke-linecap="round"
+                          />
+                        </g>
+                      </svg>
+                      <svg width="6px" height="3px"></svg>
+                    </button>
+                  </li>
+                  {/* actions */}
+                  <li>
+                    <span>Actions</span>
+                    <div></div>
+                  </li>
+                </div>
+              </ul>
             )}
 
             {archiveProjects?.map((item, id) => (
@@ -658,9 +723,12 @@ function ProjectListPage() {
                             >
                               Restore
                             </button>
-                            <li className="text-red-600 block px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer">
+                            <button
+                              onClick={() => handleDelete(item._id)}
+                              className="text-red-600 block px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                            >
                               Delete
-                            </li>
+                            </button>
                           </ul>
                         </div>
                       )}

@@ -121,7 +121,11 @@ const archiveProject = asyncHandler(async (req, res) => {
       return res.status(404).json(new ApiError(404, "Project not found"));
     }
 
-    project.isArchived = true;
+    if (project.isArchived) {
+      project.isArchived = false;
+    } else {
+      project.isArchived = true;
+    }
     await project.save();
 
     res
@@ -133,6 +137,31 @@ const archiveProject = asyncHandler(async (req, res) => {
   }
 });
 
+// const updateProjectArchiveStatus = asyncHandler(async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { isArchived } = req.body;
+
+//     const project = await Project.findById(id);
+
+//     if (!project) {
+//       return res.status(404).json(new ApiError(404, "Project not found"));
+//     }
+
+//     project.isArchived = isArchived;
+//     await project.save();
+
+//     const message = isArchived
+//       ? "Project Archived Successfully"
+//       : "Project Unarchived Successfully";
+
+//     res.status(200).json(new ApiResponse(200, { project }, message));
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json(new ApiError(500, "Server error"));
+//   }
+// });
+
 module.exports = {
   createProject,
   getAllProjects,
@@ -141,4 +170,5 @@ module.exports = {
   deleteProject,
   updateTeamMembers,
   archiveProject,
+  // updateProjectArchiveStatus,
 };

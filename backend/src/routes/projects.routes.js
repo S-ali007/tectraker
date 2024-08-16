@@ -7,6 +7,7 @@ const {
   deleteProject,
   updateTeamMembers,
   archiveProject,
+  updateProjectArchiveStatus,
 } = require("../controllers/projects.controller");
 const { verifyJwt } = require("../middlewares/auth.middleware");
 const router = Router();
