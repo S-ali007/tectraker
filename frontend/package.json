@@ -12,6 +12,7 @@
     "@reduxjs/toolkit": "^2.2.6",
     "axios": "^1.7.2",
     "gsap": "file:gsap-bonus.tgz",
+    "js-cookie": "^3.0.5",
     "next": "14.2.5",
     "nookies": "^2.5.2",
     "react": "^18",

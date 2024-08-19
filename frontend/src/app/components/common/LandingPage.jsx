@@ -1,13 +1,17 @@
 "use client";
 import api from "@/api";
+import { logout } from "@/app/features/authSlice";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React from "react";
+import { useDispatch } from "react-redux";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 function LandingPage() {
   const router = useRouter();
+  const dispatch = useDispatch();
+
   const path = usePathname();
 
   if (path == "/login" || path == "/signup" || path == "/verifyemail") {
@@ -206,18 +210,13 @@ function LandingPage() {
     },
   ];
 
-  const logout = async () => {
-    try {
-      await api.post("/api/v1/users/logout");
-      const keysToRemove = ["user", "userData"];
+  const handleLogout = () => {
+    localStorage.removeItem("userData");
+    document.cookie = "accessToken=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
 
-      keysToRemove.map((key) => localStorage.removeItem(key));
+    dispatch(logout());
 
-      toast.success("loggedOut Successfully !");
-      router.push("/login");
-    } catch (error) {
-      toast.error(error.message);
-    }
+    router.push("/login");
   };
 
   return (
@@ -257,7 +256,7 @@ function LandingPage() {
         })}
       </div>
       <button
-        onClick={logout}
+        onClick={handleLogout}
         className="text-[#fff] rounded-[10px] bg-[#35bf8a] max-w-[150px] py-[10px] w-full mx-auto"
       >
         Log Out

@@ -1,7 +1,7 @@
 const { Router } = require("express");
 const {
   registerUser,
-  logoutUser,
+  // logoutUser,
   loginUser,
   refreshAccessToken,
   verifyEmail,
@@ -13,7 +13,7 @@ router.post("/register", registerUser);
 router.post("/verifyemail", verifyEmail);
 router.route("/login").post(loginUser);
 // secure Route
-router.route("/logout").post(verifyJwt, logoutUser);
+// router.route("/logout").post(logoutUser);
 router.route("/refresh-token").post(refreshAccessToken);
 
 module.exports = router;

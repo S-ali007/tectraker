@@ -12,6 +12,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import "react-toastify/dist/ReactToastify.css";
 import api from "@/api";
 import toast, { Toaster } from "react-hot-toast";
+import Cookie from "js-cookie";
 
 const ProjectPage = () => {
   const searchParams = useSearchParams();
@@ -26,8 +27,8 @@ const ProjectPage = () => {
     const fetchProjectDetails = async () => {
       if (projectId) {
         try {
-          const data = JSON.parse(localStorage.getItem("userData"));
-          const token = data?.accessToken;
+          const token = Cookie.get("accessToken");
+
           const response = await api.get(`/api/v1/project/${projectId}`, {
             headers: {
               Authorization: token,
@@ -61,8 +62,7 @@ const ProjectPage = () => {
   const handleNext = async () => {
     if (tab === "general" && projectName.trim()) {
       localStorage.setItem("user", projectName);
-      const data = JSON.parse(localStorage.getItem("userData"));
-      const token = data?.accessToken;
+      const token = Cookie.get("accessToken");
 
       if (!projectId) {
         dispatch(setCurrentStep("invite-team"));
@@ -96,10 +96,8 @@ const ProjectPage = () => {
   };
 
   const handleUpdateProject = async () => {
-    const data = JSON.parse(localStorage.getItem("userData"));
-    const token = data?.accessToken;
-
     try {
+      const token = Cookie.get("accessToken");
       const response = await api.put(
         `/api/v1/project/${projectId}`,
         { name: projectName },
@@ -151,13 +149,11 @@ const ProjectPage = () => {
     );
 
     if (hasEmptyFields) {
-      console.log(hasEmptyFields);
       setEmailError(true);
       return;
     }
 
-    const data = JSON.parse(localStorage.getItem("userData"));
-    const token = data?.accessToken;
+    const token = Cookie.get("accessToken");
 
     if (!hasEmptyFields) {
       try {
@@ -172,9 +168,9 @@ const ProjectPage = () => {
           }
         );
 
-        if (response.data && response.data.data) {
+        if (response?.data && response?.data?.data) {
           dispatch(
-            setTeamMembers(response.data.data.project.teamMembers || [])
+            setTeamMembers(response?.data?.data?.project?.teamMembers || [])
           );
         }
 

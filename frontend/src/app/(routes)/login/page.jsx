@@ -9,6 +9,7 @@ import TypeWriterComponent from "@/app/components/TypeWriter";
 import api from "@/api";
 import { login } from "@/app/features/authSlice";
 import { useDispatch } from "react-redux";
+import Cookies from "js-cookie";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -25,13 +26,11 @@ export default function LoginPage() {
 
       if (res?.data?.data?.user?.isVerified === true) {
         const { user, accessToken } = res.data.data;
-        localStorage.setItem("userData", JSON.stringify(res.data.data));
-        document.cookie = `accessToken=${accessToken}`;
-
         dispatch(login({ user, token: accessToken }));
+        Cookies.set("accessToken", accessToken);
 
         toast.success("Login success");
-        router.push("/projects?tab=active");
+        router.push(`/projects?tab=active&sortBy=name&sortOrder=asc`);
       } else {
         toast.error("Email not verified");
       }

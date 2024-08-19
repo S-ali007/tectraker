@@ -1,6 +1,17 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
+const timeEntrySchema = new Schema(
+  {
+    user_id: { type: Number, required: true },
+    task_name: { type: String, required: true },
+    start_time: { type: Date, required: true },
+    end_time: { type: Date },
+    duration: { type: Number },
+  },
+  { timestamps: true }
+);
+
 const teamMemberSchema = new Schema({
   name: { type: String, required: true },
   email: { type: String, required: true },
@@ -73,6 +84,7 @@ const projectSchema = new Schema(
       id: Number,
     },
     teamMembers: [teamMemberSchema],
+    timeEntries: [timeEntrySchema],
   },
   { timestamps: true }
 );

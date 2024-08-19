@@ -1,8 +1,9 @@
-import useAuthRedirect from "@/app/components/common/UseAuthRedirect";
+
 import MyActivites from "@/assets/icons/MyActivites";
 
+
 function page() {
-  // useAuthRedirect();
+
   return (
     <div className="max-w-[1440px] w-full px-[50px] py-[32px]">
       <h1 className="text-[21px] leading-[24px] font-[700] text-[#404040] ">
@@ -17,6 +18,8 @@ function page() {
           </p>
         </div>
       </div>
+
+      
     </div>
   );
 }

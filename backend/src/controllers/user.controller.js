@@ -164,29 +164,26 @@ const loginUser = asyncHandler(async (req, res) => {
   );
 });
 
-const logoutUser = asyncHandler(async (req, res) => {
-  const userId = User.findById(req.user._id);
-  console.log(userId);
-  try {
-    if (userId) {
-      const options = {
-        httpOnly: true,
-        secure: true,
-      };
-      return res
-        .status(200)
-        .clearCookie("accessToken", options)
-        .clearCookie("refreshToken", options)
-        .json(new ApiResponse(200, {}, "LoggedOut Successfully !!"));
-    } else {
-      return res
-        .status(200)
-        .json(new ApiResponse(200, {}, "Already Logged Out"));
-    }
-  } catch (error) {
-    console.log(error, "error");
-  }
-});
+// const logoutUser = asyncHandler(async (req, res) => {
+//   const { userId } = req.user; 
+
+//   // const user = await User.findById(userId);
+
+//   // if (!user) {
+//   //   return res.status(404).json(new ApiError(404, "", "User not found"));
+//   // }
+
+//   // user.refreshToken = ""; 
+//   // await user.save();
+
+//   // res.clearCookie("refreshToken", {
+//   //   httpOnly: true,
+//   //   secure: process.env.NODE_ENV === "production",
+//   // });
+
+//   // return res.status(200).json(new ApiResponse(200, {}, "Logged out successfully"));
+// });
+
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
   try {
@@ -265,7 +262,7 @@ const verifyEmail = asyncHandler(async (req, res) => {
 module.exports = {
   registerUser,
   loginUser,
-  logoutUser,
+  // logoutUser,
   refreshAccessToken,
   verifyEmail,
 };

@@ -9,10 +9,12 @@ import {
   setAllArchiveProjects,
   setAllProjects,
 } from "@/app/features/projectSlice";
+
 import toast from "react-hot-toast";
 import YesAndNo from "@/app/components/common/YesAndNo";
 import ActiveProjects from "@/assets/icons/ActiveProjects";
 import ArchiveProjects from "@/assets/icons/ArchiveProjects";
+import Cookies from "js-cookie";
 
 function ProjectListPage() {
   const searchParams = useSearchParams();
@@ -70,8 +72,7 @@ function ProjectListPage() {
     setActionDelete(true);
   };
   const handleConfirmArchive = async () => {
-    const data = JSON.parse(localStorage.getItem("userData"));
-    const token = data?.accessToken;
+    const token = Cookies.get("accessToken");
 
     try {
       const response = await api.put(
@@ -97,6 +98,8 @@ function ProjectListPage() {
   };
 
   const fetchProjects = async () => {
+    const token = Cookies.get("accessToken");
+
     try {
       const response = await api.get(
         `/api/v1/project/projects?tab=${tab}&sortBy=${sortBy}&sortOrder=${sortOrder}`,
@@ -106,16 +109,23 @@ function ProjectListPage() {
           },
         }
       );
-      const projectAll = response.data;
-      dispatch(setAllProjects(projectAll));
+      if (response) {
+        const projectAll = response.data;
+
+        if (tab === "active") {
+          dispatch(setAllProjects(projectAll));
+        } else if (tab === "archive") {
+          dispatch(setAllArchiveProjects(projectAll));
+        }
+      }
     } catch (error) {
-      console.error("Failed to fetch projects", error);
+      dispatch(setAllProjects([]));
     }
   };
 
   const handleDeleteProject = async () => {
-    const data = JSON.parse(localStorage.getItem("userData"));
-    const token = data?.accessToken;
+    const token = Cookies.get("accessToken");
+
     try {
       const response = await api.delete(
         `/api/v1/project/${selectedProjectId}`,
@@ -128,9 +138,10 @@ function ProjectListPage() {
       if (response.status === 200) {
         setActionDelete(false);
         toast.success("Project Deleted successfully");
+        fetchProjects();
       }
     } catch (error) {
-      console.log(error);
+      toast.error(error);
     }
   };
   useEffect(() => {
@@ -140,10 +151,9 @@ function ProjectListPage() {
     };
   }, []);
   useEffect(() => {
-    const fetchProjects = async () => {
-      const data = JSON.parse(localStorage.getItem("userData"));
-      const token = data?.accessToken;
+    const token = Cookies.get("accessToken");
 
+    const fetchProjects = async () => {
       try {
         const response = await api.get(
           `/api/v1/project/projects?tab=${tab}&sortBy=${sortBy}&sortOrder=${sortOrder}`,
@@ -228,6 +238,7 @@ function ProjectListPage() {
             action={"delete"}
           />
         )}
+
         {projects.length != 0 && tab == "active" && (
           <div className="block w-full">
             {/* orders-ALL */}
@@ -461,7 +472,7 @@ function ProjectListPage() {
                             </button>
                             <button
                               onClick={() => handleDelete(item._id)}
-                              className="text-red-600 block px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                              className="text-red-600  px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer w-full  items-start flex "
                             >
                               Delete
                             </button>
@@ -725,7 +736,7 @@ function ProjectListPage() {
                             </button>
                             <button
                               onClick={() => handleDelete(item._id)}
-                              className="text-red-600 block px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                              className="text-red-600 w-full  px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer items-start flex"
                             >
                               Delete
                             </button>

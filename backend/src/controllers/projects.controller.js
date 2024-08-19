@@ -41,7 +41,7 @@ const getAllProjects = asyncHandler(async (req, res) => {
   }
 });
 
-const getProjectById = async (req, res) => {
+const getProjectById = asyncHandler(async (req, res) => {
   try {
     const project = await Project.findById(req.params.id);
     if (!project) {
@@ -56,9 +56,9 @@ const getProjectById = async (req, res) => {
     console.log(error, "error");
     res.status(500).json(new ApiError(500, "Server error"));
   }
-};
+});
 
-const updateProject = async (req, res) => {
+const updateProject = asyncHandler(async (req, res) => {
   try {
     const updatedProject = await Project.findByIdAndUpdate(
       req.params.id,
@@ -72,9 +72,9 @@ const updateProject = async (req, res) => {
   } catch (error) {
     res.status(400).json(new ApiError(400, error.message));
   }
-};
+});
 
-const updateTeamMembers = async (req, res) => {
+const updateTeamMembers = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
     const { teamMembers } = req.body;
@@ -95,9 +95,9 @@ const updateTeamMembers = async (req, res) => {
   } catch (error) {
     res.status(500).json(new ApiError(500, "Server error"));
   }
-};
+});
 
-const deleteProject = async (req, res) => {
+const deleteProject = asyncHandler(async (req, res) => {
   try {
     const deletedProject = await Project.findByIdAndDelete(req.params.id);
     if (!deletedProject) {
@@ -109,7 +109,7 @@ const deleteProject = async (req, res) => {
   } catch (error) {
     res.status(400).json(new ApiError(400, error.message));
   }
-};
+});
 
 const archiveProject = asyncHandler(async (req, res) => {
   try {
@@ -121,11 +121,7 @@ const archiveProject = asyncHandler(async (req, res) => {
       return res.status(404).json(new ApiError(404, "Project not found"));
     }
 
-    if (project.isArchived) {
-      project.isArchived = false;
-    } else {
-      project.isArchived = true;
-    }
+    project.isArchived = !project.isArchived;
     await project.save();
 
     res
@@ -137,30 +133,59 @@ const archiveProject = asyncHandler(async (req, res) => {
   }
 });
 
-// const updateProjectArchiveStatus = asyncHandler(async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { isArchived } = req.body;
+const addTimeEntry = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { user_id, task_name, start_time, end_time } = req.body;
 
-//     const project = await Project.findById(id);
+    const project = await Project.findById(id);
+    if (!project) {
+      return res.status(404).json(new ApiError(404, "Project not found"));
+    }
 
-//     if (!project) {
-//       return res.status(404).json(new ApiError(404, "Project not found"));
-//     }
+    const duration = end_time
+      ? (new Date(end_time) - new Date(start_time)) / 1000
+      : null;
 
-//     project.isArchived = isArchived;
-//     await project.save();
+    project.timeEntries.push({
+      user_id,
+      task_name,
+      start_time,
+      end_time,
+      duration,
+    });
+    await project.save();
 
-//     const message = isArchived
-//       ? "Project Archived Successfully"
-//       : "Project Unarchived Successfully";
+    res
+      .status(200)
+      .json(new ApiResponse(200, { project }, "Time Entry Added Successfully"));
+  } catch (error) {
+    res.status(500).json(new ApiError(500, "Server error"));
+  }
+});
 
-//     res.status(200).json(new ApiResponse(200, { project }, message));
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json(new ApiError(500, "Server error"));
-//   }
-// });
+const getTimeEntries = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const project = await Project.findById(id).select("timeEntries");
+    if (!project) {
+      return res.status(404).json(new ApiError(404, "Project not found"));
+    }
+
+    res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { timeEntries: project.timeEntries },
+          "Time Entries Retrieved Successfully"
+        )
+      );
+  } catch (error) {
+    res.status(500).json(new ApiError(500, "Server error"));
+  }
+});
 
 module.exports = {
   createProject,
@@ -170,5 +195,6 @@ module.exports = {
   deleteProject,
   updateTeamMembers,
   archiveProject,
-  // updateProjectArchiveStatus,
+  addTimeEntry,
+  getTimeEntries,
 };
