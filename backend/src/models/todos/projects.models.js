@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 const timeEntrySchema = new Schema(
   {
-    user_id: { type: Number, required: true },
+    user_id: { type: String, required: true },
     task_name: { type: String, required: true },
     start_time: { type: Date, required: true },
     end_time: { type: Date },

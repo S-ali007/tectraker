@@ -3,6 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   currentStep: "general",
   projectName: "",
+  projectDescription: "", 
   teamMembers: [{ id: "", name: "", email: "", role: "worker" }],
   projects: [],
   currentProjectId: null,
@@ -18,6 +19,9 @@ const projectSlice = createSlice({
     },
     setProjectName(state, action) {
       state.projectName = action.payload;
+    },
+    setProjectDescription(state, action) {
+      state.projectDescription = action.payload;
     },
     addTeamMember(state, action) {
       if (state.currentProjectId && typeof action.payload === "object") {
@@ -35,7 +39,7 @@ const projectSlice = createSlice({
       state.teamMembers = action.payload;
     },
     addProject(state, action) {
-      const { projectName, id } = action.payload;
+      const { projectName, id, projectDescription } = action.payload;
       const existingProjectIndex = state.projects.findIndex(
         (project) => project.name === projectName
       );
@@ -46,14 +50,19 @@ const projectSlice = createSlice({
         };
         state.currentProjectId = state.projects[existingProjectIndex].id;
       } else {
-        const newProject = { ...action.payload, teamMembers: [] };
+        const newProject = { 
+          ...action.payload, 
+          teamMembers: [] 
+        };
         state.projects.push(newProject);
         state.currentProjectId = id;
       }
+      state.projectDescription = projectDescription || "";
     },
     resetProject(state) {
       state.currentStep = "general";
       state.projectName = "";
+      state.projectDescription = ""; // Reset description as well
       state.teamMembers = [{ id: "", name: "", email: "", role: "worker" }];
       state.currentProjectId = null;
     },
@@ -69,6 +78,7 @@ const projectSlice = createSlice({
 export const {
   setCurrentStep,
   setProjectName,
+  setProjectDescription, 
   addTeamMember,
   setTeamMembers,
   addProject,

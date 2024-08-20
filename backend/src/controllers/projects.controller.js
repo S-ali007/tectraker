@@ -135,10 +135,8 @@ const archiveProject = asyncHandler(async (req, res) => {
 
 const addTimeEntry = asyncHandler(async (req, res) => {
   try {
-    const { id } = req.params;
     const { user_id, task_name, start_time, end_time } = req.body;
-
-    const project = await Project.findById(id);
+    const project = await Project.findById(user_id);
     if (!project) {
       return res.status(404).json(new ApiError(404, "Project not found"));
     }
@@ -154,6 +152,7 @@ const addTimeEntry = asyncHandler(async (req, res) => {
       end_time,
       duration,
     });
+
     await project.save();
 
     res

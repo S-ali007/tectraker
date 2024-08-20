@@ -1,10 +1,3 @@
-
-
 export default function Home() {
-
-  return (
-    <>
-     dsfsds
-    </>
-  );
+  return <>tech tracker</>;
 }

@@ -126,7 +126,7 @@ function LandingPage() {
     {
       id: 3,
       title: "Web Tracker",
-      link: "/web-tracker",
+      link: "/web-tracker?sort-by=recently-tracked&sort-order=asc",
       svg: (
         <svg
           width="29"
@@ -234,8 +234,8 @@ function LandingPage() {
       </Link>
       <div className="flex flex-col gap-[10px]">
         {maindata.map((item) => {
-          const currentPath = path.split("cts")[0];
-          const linkPath = item.link.split("cts")[0];
+          const currentPath = path.split("r")[0];
+          const linkPath = item.link.split("r")[0];
 
           const isActive = currentPath === linkPath;
 
