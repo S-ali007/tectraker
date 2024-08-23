@@ -12,7 +12,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`${proximaNova.className} mx-auto max-w-[1630px] w-full flex`}
+        className={`${proximaNova.className} mx-auto max-w-[1630px] w-full flex `}
       >
         <ClientProvider>{children}</ClientProvider>
       </body>

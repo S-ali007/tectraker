@@ -3,11 +3,14 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   currentStep: "general",
   projectName: "",
-  projectDescription: "", 
+  projectDescription: "",
   teamMembers: [{ id: "", name: "", email: "", role: "worker" }],
   projects: [],
   currentProjectId: null,
   archiveProjects: [],
+  taskDuration: [],
+  selectedProjects: [],
+  timeEntriesForProjects: [],
 };
 
 const projectSlice = createSlice({
@@ -22,6 +25,9 @@ const projectSlice = createSlice({
     },
     setProjectDescription(state, action) {
       state.projectDescription = action.payload;
+    },
+    setTaskDuration(state, action) {
+      state.taskDuration = action.payload;
     },
     addTeamMember(state, action) {
       if (state.currentProjectId && typeof action.payload === "object") {
@@ -50,9 +56,9 @@ const projectSlice = createSlice({
         };
         state.currentProjectId = state.projects[existingProjectIndex].id;
       } else {
-        const newProject = { 
-          ...action.payload, 
-          teamMembers: [] 
+        const newProject = {
+          ...action.payload,
+          teamMembers: [],
         };
         state.projects.push(newProject);
         state.currentProjectId = id;
@@ -62,7 +68,7 @@ const projectSlice = createSlice({
     resetProject(state) {
       state.currentStep = "general";
       state.projectName = "";
-      state.projectDescription = ""; // Reset description as well
+      state.projectDescription = "";
       state.teamMembers = [{ id: "", name: "", email: "", role: "worker" }];
       state.currentProjectId = null;
     },
@@ -72,19 +78,28 @@ const projectSlice = createSlice({
     setAllArchiveProjects(state, action) {
       state.archiveProjects = action.payload;
     },
+    setSelectedProjects(state, action) {
+      state.selectedProjects = action.payload;
+    },
+    setTimeEntriesForProject(state, action) {
+      state.timeEntriesForProjects = action.payload;
+    },
   },
 });
 
 export const {
   setCurrentStep,
   setProjectName,
-  setProjectDescription, 
+  setProjectDescription,
   addTeamMember,
   setTeamMembers,
   addProject,
   resetProject,
   setAllArchiveProjects,
   setAllProjects,
+  setTaskDuration,
+  setSelectedProjects,
+  setTimeEntriesForProject,
 } = projectSlice.actions;
 
 export default projectSlice.reducer;

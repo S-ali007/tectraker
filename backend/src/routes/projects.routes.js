@@ -27,6 +27,6 @@ router.put("/:id/team-members", verifyJwt, updateTeamMembers);
 router.put("/:id/archive", verifyJwt, archiveProject);
 
 router.post("/:id/time-entries", addTimeEntry);
-router.get("/:id/time-entries", verifyJwt, getTimeEntries);
+router.get("/:id/time-entries", getTimeEntries);
 
 module.exports = router;

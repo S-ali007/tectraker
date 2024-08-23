@@ -220,49 +220,52 @@ function LandingPage() {
   };
 
   return (
-    <div className="flex max-w-[230px] w-full bg-[#3863a3] pt-[22px] h-screen flex-col gap-[30px]">
-      <Link
-        href={"/"}
-        className="max-w-[180px] w-full flex items-center gap-[5px] mx-auto mb-[32px]"
-      >
-        <div className="max-w-[33px] w-full">
-          <img src="/stop-watch/stop-watch-logo.png" alt="stop-watch" />
+    <>
+    <div className="pl-[230px]"></div>
+      <div className="fixed flex max-w-[230px] w-full bg-[#3863a3] pt-[22px] h-screen flex-col gap-[30px] ">
+        <Link
+          href={"/"}
+          className="max-w-[180px] w-full flex items-center gap-[5px] mx-auto mb-[32px]"
+        >
+          <div className="max-w-[33px] w-full">
+            <img src="/stop-watch/stop-watch-logo.png" alt="stop-watch" />
+          </div>
+          <h1 className="text-[#fff] font-proximaNova text-[15px] leading-[18px] uppercase">
+            TechTracker
+          </h1>
+        </Link>
+        <div className="flex flex-col gap-[10px]">
+          {maindata.map((item) => {
+            const currentPath = path.split("r")[0];
+            const linkPath = item.link.split("r")[0];
+
+            const isActive = currentPath === linkPath;
+
+            const linkClass = `flex items-center text-white gap-[10px] py-[15px] pl-[32px] pr-[20px] w-full transition-colors border-l-[5px] ${
+              isActive
+                ? "bg-[#30558d] border-l-[5px] border-l-[#35bf8a]"
+                : "border-l-transparent"
+            }`;
+
+            return (
+              <Link key={item.id} href={item.link} className={linkClass}>
+                <div>{item.svg}</div>
+                <h1 className="text-[15px] leading-[15px] capitalize">
+                  {item.title}
+                </h1>
+              </Link>
+            );
+          })}
         </div>
-        <h1 className="text-[#fff] font-proximaNova text-[15px] leading-[18px] uppercase">
-          TechTracker
-        </h1>
-      </Link>
-      <div className="flex flex-col gap-[10px]">
-        {maindata.map((item) => {
-          const currentPath = path.split("r")[0];
-          const linkPath = item.link.split("r")[0];
-
-          const isActive = currentPath === linkPath;
-
-          const linkClass = `flex items-center text-white gap-[10px] py-[15px] pl-[32px] pr-[20px] w-full transition-colors border-l-[5px] ${
-            isActive
-              ? "bg-[#30558d] border-l-[5px] border-l-[#35bf8a]"
-              : "border-l-transparent"
-          }`;
-
-          return (
-            <Link key={item.id} href={item.link} className={linkClass}>
-              <div>{item.svg}</div>
-              <h1 className="text-[15px] leading-[15px] capitalize">
-                {item.title}
-              </h1>
-            </Link>
-          );
-        })}
+        <button
+          onClick={handleLogout}
+          className="text-[#fff] rounded-[10px] bg-[#35bf8a] max-w-[150px] py-[10px] w-full mx-auto"
+        >
+          Log Out
+        </button>
+        <ToastContainer />
       </div>
-      <button
-        onClick={handleLogout}
-        className="text-[#fff] rounded-[10px] bg-[#35bf8a] max-w-[150px] py-[10px] w-full mx-auto"
-      >
-        Log Out
-      </button>
-      <ToastContainer />
-    </div>
+    </>
   );
 }
 
