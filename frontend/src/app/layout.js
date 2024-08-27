@@ -1,6 +1,6 @@
 import "./globals.css";
 import { proximaNova } from "../../utils/customFonts";
-import ClientProvider from "./clientProvider";
+import ClientProvider from "./ClientProvider";
 
 export const metadata = {
   title: "TechTracker",
