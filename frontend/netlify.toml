@@ -1,4 +1,4 @@
 [[redirects]]
 from = "/*"
-to = "/src/app/layout.js "
+to = ".next "
 status = 200 
