@@ -9,11 +9,6 @@ const ProtectedRoute = ({ children }) => {
   const router = useRouter();
   const path = usePathname();
 
-  // React.useEffect(() => {
-  //   if (!isAuthenticated && path !== "/verifyemail" && path !== "/signup") {
-  //     router.push("/login");
-  //   }
-  // }, [isAuthenticated, path, router]);
 
   if (!isAuthenticated && (path === "/verifyemail" || path === "/signup")) {
     // return router.push("/login");

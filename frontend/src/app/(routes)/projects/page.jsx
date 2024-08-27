@@ -27,11 +27,10 @@ function ProjectListPage() {
   const [actionArchive, setActionArchive] = useState(false);
   const [actionDelete, setActionDelete] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState(null);
-  const { projects, currentProjectId, archiveProjects } = useSelector(
-    (state) => state.project
-  );
+  const { projects, archiveProjects } = useSelector((state) => state.project);
   const actionRef = useRef(null);
 
+ 
   const handleSort = (field) => {
     const newSortOrder =
       sortBy === field && sortOrder === "asc" ? "desc" : "asc";

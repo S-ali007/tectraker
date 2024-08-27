@@ -1,20 +1,20 @@
 "use client";
-import api from "@/api";
 import { logout } from "@/app/features/authSlice";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import React from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 function LandingPage() {
   const router = useRouter();
   const dispatch = useDispatch();
+  const { token } = useSelector((state) => state.auth);
 
   const path = usePathname();
 
-  if (path == "/login" || path == "/signup" || path == "/verifyemail") {
+  if (token == "" || token == null || token == undefined) {
     return null;
   }
 
@@ -221,7 +221,7 @@ function LandingPage() {
 
   return (
     <>
-    <div className="pl-[230px]"></div>
+      <div className="pl-[230px]"></div>
       <div className="fixed flex max-w-[230px] w-full bg-[#3863a3] pt-[22px] h-screen flex-col gap-[30px] ">
         <Link
           href={"/"}
