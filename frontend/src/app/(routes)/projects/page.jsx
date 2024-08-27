@@ -28,9 +28,12 @@ function ProjectListPage() {
   const [actionDelete, setActionDelete] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const { projects, archiveProjects } = useSelector((state) => state.project);
+  const { token } = useSelector((state) => state.auth);
   const actionRef = useRef(null);
 
- 
+  if (token == "" || token == null || token == undefined) {
+    return router.push("/login");
+  }
   const handleSort = (field) => {
     const newSortOrder =
       sortBy === field && sortOrder === "asc" ? "desc" : "asc";
