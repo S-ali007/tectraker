@@ -6,10 +6,17 @@ const { asyncHandler } = require("../utils/asyncHandler");
 const createProject = asyncHandler(async (req, res) => {
   try {
     const { name, teamMembers } = req.body;
-    const project = await Project.create({ name, teamMembers });
+    const userId = req.user._id;
+
+    const project = await Project.create({
+      name,
+      teamMembers,
+      owner_id: userId,
+    });
+
     return res
-      .status(200)
-      .json(new ApiResponse(200, { project }, "Project Created Successfully"));
+      .status(201)
+      .json(new ApiResponse(201, { project }, "Project Created Successfully"));
   } catch (error) {
     console.log(error, "error");
     res.status(500).json(new ApiError(500, "Server error"));
@@ -19,13 +26,17 @@ const createProject = asyncHandler(async (req, res) => {
 const getAllProjects = asyncHandler(async (req, res) => {
   try {
     const { sortBy, sortOrder, tab } = req.query;
+    const userId = req.user._id;
 
     let sortCriteria = {};
     if (sortBy === "name" || sortBy === "created_at") {
       sortCriteria[sortBy] = sortOrder === "asc" ? 1 : -1;
     }
 
-    let filter = {};
+    let filter = {
+      owner_id: userId,
+    };
+
     if (tab === "archive") {
       filter.isArchived = true;
     } else if (tab === "active") {

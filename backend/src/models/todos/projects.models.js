@@ -31,7 +31,7 @@ const projectSchema = new Schema(
     id: Number,
     name: String,
     billable: Boolean,
-    owner_id: Number,
+    owner_id: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     admin_id: Number,
     stats: {
       worked_total: Number,
