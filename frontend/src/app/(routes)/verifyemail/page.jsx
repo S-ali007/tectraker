@@ -35,7 +35,7 @@ export default function VerifyEmailPage() {
           dispatch(verifyEmail(response.data.user));
           setVerified(true);
           toast.success("Email verified successfully");
-          router.push("/projects?tab=active&sortBy=name&sortOrder=asc");
+          router.push("/");
         } catch (error) {
           console.error("Verification failed:", error);
           toast.error(error?.response?.data?.errors || "Verification failed");
@@ -48,26 +48,5 @@ export default function VerifyEmailPage() {
     }
   }, [token, dispatch, router]);
 
-  return (
-    <div className="w-full mx-auto flex flex-col items-center justify-center min-h-screen py-2">
-      <h1 className="text-4xl">Verify Email</h1>
-      <h2 className="p-2 text-black">
-        {token ? `Token: ${token}` : "No token"}
-      </h2>
-
-      {verified && (
-        <div className="flex flex-col w-full justify-center items-center mt-5 gap-5">
-          <h2 className="text-2xl">Email Verified Successfully</h2>
-          <Link className="text-2xl underline" href="/login">
-            Login
-          </Link>
-        </div>
-      )}
-      {error && (
-        <div className="flex flex-col w-full justify-center items-center mt-5 gap-5">
-          <h2 className="text-2xl text-red-500">Verification Error</h2>
-        </div>
-      )}
-    </div>
-  );
+  return null;
 }

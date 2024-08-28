@@ -27,7 +27,6 @@ export default function SignupPage() {
       try {
         const response = await api.post("/api/v1/users/register", user);
 
-        toast.success("User Registered Successfully");
         toast.success("Check Your Email To Verify");
         // console.log("Signup success", response.data);
         if (!response) {
