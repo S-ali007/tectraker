@@ -28,7 +28,7 @@ const sendEmail = async ({ email, emailType, userId }) => {
     });
 
     const mailOptions = {
-      from: "alitechtribe007@gmail.com",
+      from: process.env.SMTP_MAIL,
       to: email,
       subject:
         emailType === "VERIFY" ? "Verify your email" : "Reset your password",
