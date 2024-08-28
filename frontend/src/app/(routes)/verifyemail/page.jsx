@@ -35,7 +35,7 @@ export default function VerifyEmailPage() {
           dispatch(verifyEmail(response.data.user));
           setVerified(true);
           toast.success("Email verified successfully");
-          router.push("/");
+          router.push("/projects?tab=active&sortBy=name&sortOrder=asc");
         } catch (error) {
           console.error("Verification failed:", error);
           toast.error(error?.response?.data?.errors || "Verification failed");
