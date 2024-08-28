@@ -14,4 +14,3 @@ const createInstance = (baseUrl) => {
 };
 
 export default createInstance(API_URL);
-  
