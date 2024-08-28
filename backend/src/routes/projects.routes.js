@@ -9,6 +9,7 @@ const {
   archiveProject,
   addTimeEntry,
   getTimeEntries,
+  addTeamMembers,
 } = require("../controllers/projects.controller");
 const { verifyJwt } = require("../middlewares/auth.middleware");
 
@@ -23,6 +24,7 @@ router
   .put(verifyJwt, updateProject)
   .delete(verifyJwt, deleteProject);
 
+router.post("/:id/team-members", verifyJwt, addTeamMembers);
 router.put("/:id/team-members", verifyJwt, updateTeamMembers);
 router.put("/:id/archive", verifyJwt, archiveProject);
 

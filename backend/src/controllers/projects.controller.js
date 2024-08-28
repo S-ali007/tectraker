@@ -1,4 +1,5 @@
 const Project = require("../models/todos/projects.models");
+const Team = require("../models/todos/team.models");
 const ApiError = require("../utils/ApiError");
 const ApiResponse = require("../utils/ApiResponse");
 const { asyncHandler } = require("../utils/asyncHandler");
@@ -85,12 +86,42 @@ const updateProject = asyncHandler(async (req, res) => {
   }
 });
 
-const updateTeamMembers = asyncHandler(async (req, res) => {
+const addTeamMembers = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
     const { teamMembers } = req.body;
 
     const project = await Project.findById(id);
+
+    if (!project) {
+      return res.status(404).json(new ApiError(404, "Project not found"));
+    }
+
+    const newTeamMembers = await Team.insertMany(
+      teamMembers.map((member) => ({ ...member, project_id: id }))
+    );
+
+    project.teamMembers.push(...newTeamMembers.map((member) => member._id));
+
+    await project.save();
+
+    res
+      .status(200)
+      .json(
+        new ApiResponse(200, { project }, "Team Members added successfully")
+      );
+  } catch (error) {
+    console.error(error);
+    res.status(500).json(new ApiError(500, "Server error"));
+  }
+});
+
+const updateTeamMembers = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { teamMembers } = req.body;
+    const project = await Team.findById(id);
+
     if (!project) {
       return res.status(404).json(new ApiError(404, "Project not found"));
     }
@@ -203,6 +234,7 @@ module.exports = {
   getProjectById,
   updateProject,
   deleteProject,
+  addTeamMembers,
   updateTeamMembers,
   archiveProject,
   addTimeEntry,

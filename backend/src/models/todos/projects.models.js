@@ -12,20 +12,6 @@ const timeEntrySchema = new Schema(
   { timestamps: true }
 );
 
-const teamMemberSchema = new Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true },
-  role: {
-    type: String,
-    enum: ["supervisor", "worker"],
-    required: true,
-  },
-  isVerified: {
-    type: Boolean,
-    default: false,
-  },
-});
-
 const projectSchema = new Schema(
   {
     id: Number,
@@ -83,7 +69,12 @@ const projectSchema = new Schema(
       address: String,
       id: Number,
     },
-    teamMembers: [teamMemberSchema],
+    teamMembers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Team",
+      },
+    ],
     timeEntries: [timeEntrySchema],
   },
   { timestamps: true }

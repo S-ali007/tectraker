@@ -157,9 +157,9 @@ const ProjectPage = () => {
 
     if (!hasEmptyFields) {
       try {
-        const response = await api.put(
+        const response = await api.post(
           `/api/v1/project/${projectId}/team-members`,
-          {},
+          { teamMembers },
           {
             headers: {
               Authorization: token,
@@ -172,6 +172,8 @@ const ProjectPage = () => {
           dispatch(
             setTeamMembers(response?.data?.data?.project?.teamMembers || [])
           );
+
+          console.log(response);
         }
 
         toast.success("Team Members Added Successfully");

@@ -4,7 +4,7 @@ const initialState = {
   currentStep: "general",
   projectName: "",
   projectDescription: "",
-  teamMembers: [{ id: "", name: "", email: "", role: "worker" }],
+  teamMembers: [{ name: "", email: "", role: "worker" }],
   projects: [],
   currentProjectId: null,
   archiveProjects: [],
@@ -69,7 +69,7 @@ const projectSlice = createSlice({
       state.currentStep = "general";
       state.projectName = "";
       state.projectDescription = "";
-      state.teamMembers = [{ id: "", name: "", email: "", role: "worker" }];
+      state.teamMembers = [{ name: "", email: "", role: "worker" }];
       state.currentProjectId = null;
     },
     setAllProjects(state, action) {

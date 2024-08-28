@@ -34,7 +34,7 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    projects: [{ type: mongoose.Schema.Types.ObjectId, ref: "Project" }], 
+    projects: [{ type: mongoose.Schema.Types.ObjectId, ref: "Project" }],
 
     forgotPasswordToken: String,
     forgotPasswordTokenExpiry: Date,

@@ -29,10 +29,13 @@ export default function VerifyEmailPage() {
     if (token) {
       const verifyUserEmail = async () => {
         try {
-          const response = await api.post("/api/v1/users/verifyemail", { token });
+          const response = await api.post("/api/v1/users/verifyemail", {
+            token,
+          });
           dispatch(verifyEmail(response.data.user));
           setVerified(true);
           toast.success("Email verified successfully");
+          router.push("/projects?tab=active&sortBy=name&sortOrder=asc");
         } catch (error) {
           console.error("Verification failed:", error);
           toast.error(error?.response?.data?.errors || "Verification failed");
@@ -48,7 +51,9 @@ export default function VerifyEmailPage() {
   return (
     <div className="w-full mx-auto flex flex-col items-center justify-center min-h-screen py-2">
       <h1 className="text-4xl">Verify Email</h1>
-      <h2 className="p-2 text-black">{token ? `Token: ${token}` : "No token"}</h2>
+      <h2 className="p-2 text-black">
+        {token ? `Token: ${token}` : "No token"}
+      </h2>
 
       {verified && (
         <div className="flex flex-col w-full justify-center items-center mt-5 gap-5">

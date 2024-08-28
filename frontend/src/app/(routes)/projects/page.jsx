@@ -71,7 +71,6 @@ function ProjectListPage() {
   };
   const handleConfirmArchive = async () => {
     const token = Cookies.get("accessToken");
-
     try {
       const response = await api.put(
         `/api/v1/project/${selectedProjectId}/archive`,
@@ -97,7 +96,6 @@ function ProjectListPage() {
 
   const fetchProjects = async () => {
     const token = Cookies.get("accessToken");
-
     try {
       const response = await api.get(
         `/api/v1/project/projects?tab=${tab}&sortBy=${sortBy}&sortOrder=${sortOrder}`,
