@@ -159,9 +159,7 @@ const ProjectPage = () => {
       try {
         const response = await api.put(
           `/api/v1/project/${projectId}/team-members`,
-          { 
-            
-           },
+          {},
           {
             headers: {
               Authorization: token,
