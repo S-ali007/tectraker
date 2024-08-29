@@ -1,9 +1,9 @@
 "use client";
+import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
-import { useSelector } from "react-redux";
 
 export default function Home() {
-  const { token } = useSelector((state) => state.auth);
+  const token = Cookies.get("accessToken");
   const router = useRouter();
 
   if (!token) {

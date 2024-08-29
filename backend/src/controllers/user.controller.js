@@ -165,7 +165,7 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 // const logoutUser = asyncHandler(async (req, res) => {
-//   const { userId } = req.user; 
+//   const { userId } = req.user;
 
 //   // const user = await User.findById(userId);
 
@@ -173,7 +173,7 @@ const loginUser = asyncHandler(async (req, res) => {
 //   //   return res.status(404).json(new ApiError(404, "", "User not found"));
 //   // }
 
-//   // user.refreshToken = ""; 
+//   // user.refreshToken = "";
 //   // await user.save();
 
 //   // res.clearCookie("refreshToken", {
@@ -183,7 +183,6 @@ const loginUser = asyncHandler(async (req, res) => {
 
 //   // return res.status(200).json(new ApiResponse(200, {}, "Logged out successfully"));
 // });
-
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
   try {
@@ -245,12 +244,20 @@ const verifyEmail = asyncHandler(async (req, res) => {
       user.isVerified = true;
       user.verifyToken = undefined;
       user.verifyTokenExpiry = undefined;
-
       await user.save();
+
+      const { accessToken, refreshToken } =
+        await generateAuthTokenAndRefresh(user);
 
       return res
         .status(200)
-        .json(new ApiResponse(200, {}, "Email verified successfully"));
+        .json(
+          new ApiResponse(
+            200,
+            { verifyToken: token, accessToken },
+            "Email verified successfully"
+          )
+        );
     } else {
       return res.status(400).json(new ApiError(400, "", "Invalid Token !"));
     }
