@@ -34,6 +34,8 @@ export default function VerifyEmailPage() {
           });
           dispatch(verifyEmail(response.data.user));
           setVerified(true);
+          console.log(verified, "verified", response.data.user);
+
           toast.success("Email verified successfully");
           // router.push("/projects?tab=active&sortBy=name&sortOrder=asc");
         } catch (error) {
