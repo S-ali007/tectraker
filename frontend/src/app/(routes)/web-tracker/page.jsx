@@ -226,8 +226,8 @@ function Page() {
                         </defs>
                       </svg>
                     </div>
-                    <div>
-                      <h1 className="text-[17px] text-[#404040]">
+                    <div >
+                      <h1 className="text-[17px] text-[#404040] w-[58px]">
                         {item.name}
                       </h1>
                       <p className="text-[11px] text-[#acb3bb] ">
@@ -240,11 +240,11 @@ function Page() {
                       </p>
                     </div>
                     {runningProjectId === item._id && (
-                      <div className="flex items-center space-x-1">
+                      <div className="flex items-center space-x-1 w-full">
                         <input
                           placeholder="Briefly describe what you are doing"
                           type="text"
-                          className="px-2 py-1 border rounded-md focus:outline-none"
+                          className="px-2 py-1 w-full border rounded-md focus:outline-none"
                           value={projectDescription}
                           onChange={(e) =>
                             dispatch(setProjectDescription(e.target.value))
