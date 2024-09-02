@@ -196,112 +196,116 @@ const ProjectPage = () => {
   };
 
   return (
-    <div className="max-w-[1440px] w-full">
-      <div className="w-full bg-[#f3f6fa] px-[50px] py-[32px]">
-        <h1 className="text-[21px] leading-[28px] font-[600]">
-          {projectId ? "Update Project" : "Start New Project"}
-        </h1>
-        <h2 className="w-full min-h-6">{projectName}</h2>
-        <ol className="ml-[15px] flex max-w-[200px] w-full gap-[40px] text-[15px] leading-[15px] list-decimal mt-[100px]">
-          {steps.map((item) => (
-            <li
-              key={item.step}
-              className={`capitalize ${
-                item.step === tab ? "opacity-100 font-[600]" : "opacity-50"
-              }`}
-            >
-              {item.step}
-            </li>
-          ))}
-        </ol>
-      </div>
-      {tab === "general" && (
-        <div className="flex items-center mt-4 gap-[20px] px-[50px]">
-          <label htmlFor="projectName">Project name</label>
-          <input
-            id="projectName"
-            type="text"
-            value={projectName}
-            onChange={handleProjectNameChange}
-            className="border border-gray-300 p-2 mt-2 max-w-[288px] w-full rounded-[10px] outline-none"
-          />
-        </div>
-      )}
-      {tab === "invite-team" && (
-        <div className="w-full px-[50px] py-[32px] h-[60vh]">
+    <div className=" w-full flex flex-col justify-between  h-screen">
+      <div>
+        <div className="w-full bg-[#f3f6fa] px-[50px] py-[32px]">
           <h1 className="text-[21px] leading-[28px] font-[600]">
-            Invite Team Members
+            {projectId ? "Update Project" : "Start New Project"}
           </h1>
-          <p>
-            Enter each team member's email address and role. They will receive
-            an email invitation to your TopTracker project.
-          </p>
-
-          {teamMembers.map((member, index) => {
-            return (
-              <div
-                key={member.id}
-                className="flex items-center mt-4 gap-[20px]"
+          <h2 className="w-full min-h-6">{projectName}</h2>
+          <ol className="ml-[15px] flex max-w-[200px] w-full gap-[40px] text-[15px] leading-[15px] list-decimal mt-[100px]">
+            {steps.map((item) => (
+              <li
+                key={item.step}
+                className={`capitalize ${
+                  item.step === tab ? "opacity-100 font-[600]" : "opacity-50"
+                }`}
               >
-                <input
-                  type="text"
-                  value={member.name}
-                  onChange={(e) =>
-                    handleTeamMemberChange(index, "name", e.target.value)
-                  }
-                  placeholder="Enter team member name"
-                  className="border border-gray-300 p-2 mt-2 max-w-[288px] w-full rounded-[10px] outline-none"
-                />
-                <input
-                  type="text"
-                  value={member.email}
-                  onChange={(e) =>
-                    handleTeamMemberChange(index, "email", e.target.value)
-                  }
-                  placeholder="Enter team member email"
-                  className={`border border-gray-300 p-2 mt-2 max-w-[288px] w-full rounded-[10px] outline-none ${
-                    emailError ? "border-red-500" : ""
-                  }`}
-                />
-                <select
-                  value={member.role}
-                  onChange={(e) =>
-                    handleTeamMemberChange(index, "role", e.target.value)
-                  }
-                  className="border border-gray-300 p-2 mt-2 max-w-[118px] w-full rounded-[10px] outline-none"
-                >
-                  <option value="worker">Worker</option>
-                  <option value="supervisor">Supervisor</option>
-                </select>
-                <svg
-                  onClick={() => removeMember(index)}
-                  className="cursor-pointer"
-                  fill="#000000"
-                  height="15px"
-                  width="15px"
-                  version="1.1"
-                  viewBox="0 0 490 490"
-                >
-                  <polygon points="456.851,0 245,212.564 33.149,0 0.708,32.337 212.669,245.004 0.708,457.678 33.149,490 245,277.443 456.851,490 489.292,457.678 277.331,245.004 489.292,32.337" />
-                </svg>
-              </div>
-            );
-          })}
-          {emailError && (
-            <p className="text-red-500 text-sm">Email must be valid</p>
-          )}
-          <button
-            onClick={addMoreFields}
-            className="text-blue-500 flex max-w-[154px] gap-[10px] text-[13px] leading-[16px] items-center w-full mt-4"
-          >
-            <span className="font-[700] text-[34px] flex">+</span> Add another
-            member
-          </button>
+                {item.step}
+              </li>
+            ))}
+          </ol>
         </div>
-      )}
+        {tab === "general" && (
+          <div className="flex items-center mt-4 gap-[20px] px-[50px]">
+            <label htmlFor="projectName">Project name</label>
+            <input
+              id="projectName"
+              type="text"
+              value={projectName}
+              onChange={handleProjectNameChange}
+              className="border border-gray-300 p-2 mt-2 max-w-[288px] w-full rounded-[10px] outline-none"
+            />
+          </div>
+        )}
+
+        {tab === "invite-team" && (
+          <div className="w-full px-[50px] py-[32px] h-[60vh]">
+            <h1 className="text-[21px] leading-[28px] font-[600]">
+              Invite Team Members
+            </h1>
+            <p>
+              Enter each team member's email address and role. They will receive
+              an email invitation to your TopTracker project.
+            </p>
+
+            {teamMembers.map((member, index) => {
+              return (
+                <div
+                  key={member.id}
+                  className="flex items-center mt-4 gap-[20px]"
+                >
+                  <input
+                    type="text"
+                    value={member.name}
+                    onChange={(e) =>
+                      handleTeamMemberChange(index, "name", e.target.value)
+                    }
+                    placeholder="Enter team member name"
+                    className="border border-gray-300 p-2 mt-2 max-w-[288px] w-full rounded-[10px] outline-none"
+                  />
+                  <input
+                    type="text"
+                    value={member.email}
+                    onChange={(e) =>
+                      handleTeamMemberChange(index, "email", e.target.value)
+                    }
+                    placeholder="Enter team member email"
+                    className={`border border-gray-300 p-2 mt-2 max-w-[288px] w-full rounded-[10px] outline-none ${
+                      emailError ? "border-red-500" : ""
+                    }`}
+                  />
+                  <select
+                    value={member.role}
+                    onChange={(e) =>
+                      handleTeamMemberChange(index, "role", e.target.value)
+                    }
+                    className="border border-gray-300 p-2 mt-2 max-w-[118px] w-full rounded-[10px] outline-none"
+                  >
+                    <option value="worker">Worker</option>
+                    <option value="supervisor">Supervisor</option>
+                  </select>
+                  <svg
+                    onClick={() => removeMember(index)}
+                    className="cursor-pointer"
+                    fill="#000000"
+                    height="15px"
+                    width="15px"
+                    version="1.1"
+                    viewBox="0 0 490 490"
+                  >
+                    <polygon points="456.851,0 245,212.564 33.149,0 0.708,32.337 212.669,245.004 0.708,457.678 33.149,490 245,277.443 456.851,490 489.292,457.678 277.331,245.004 489.292,32.337" />
+                  </svg>
+                </div>
+              );
+            })}
+            {emailError && (
+              <p className="text-red-500 text-sm">Email must be valid</p>
+            )}
+            <button
+              onClick={addMoreFields}
+              className="text-blue-500 flex max-w-[154px] gap-[10px] text-[13px] leading-[16px] items-center w-full mt-4"
+            >
+              <span className="font-[700] text-[34px] flex">+</span> Add another
+              member
+            </button>
+          </div>
+        )}
+      </div>
+
       <div
-        className={`w-full flex items-end justify-end gap-[40px] px-[30px] flex-col p-[24px] shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.3)] ${
-          tab === "general" ? "mt-[420px]" : ""
+        className={`w-full flex items-end  justify-end gap-[40px] px-[30px] flex-col p-[24px] shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.3)] ${
+          tab === "general" ? "" : ""
         }`}
       >
         <div
