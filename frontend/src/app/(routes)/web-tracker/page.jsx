@@ -14,7 +14,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 function Page() {
   const searchParams = useSearchParams();
-  const tab = searchParams.get("sort-by");
+
   const sortBy = searchParams.get("sort-by") || "name";
   const sortOrder = searchParams.get("sort-order") || "asc";
   const [runningProjectId, setRunningProjectId] = useState(null);
@@ -25,8 +25,9 @@ function Page() {
   const dispatch = useDispatch();
   const router = useRouter();
 
-  const { projects, currentProjectId, projectDescription, taskDuration } =
-    useSelector((state) => state.project);
+  const { projects, projectDescription, taskDuration } = useSelector(
+    (state) => state.project
+  );
 
   const handleSort = (field) => {
     const newSortOrder =
@@ -53,36 +54,52 @@ function Page() {
         );
         if (response) {
           const projectAll = response.data;
-
-          if (
-            tab === "name" ||
-            tab === "most-tracked" ||
-            tab === "recently-tracked"
-          ) {
-            dispatch(setAllProjects(projectAll));
-          }
+          dispatch(setAllProjects(projectAll));
         }
       } catch (error) {
         toast.error(error?.response?.data?.errors || "An error occurred");
       }
     };
 
-    if (
-      tab === "name" ||
-      tab === "most-tracked" ||
-      tab === "recently-tracked"
-    ) {
-      fetchProjects();
+    fetchProjects();
+  }, [sortBy, sortOrder, dispatch, router]);
+
+  useEffect(() => {
+    const savedProjectId = localStorage.getItem("runningProjectId");
+    const savedStartTime = localStorage.getItem("startTime");
+    const savedTimer = localStorage.getItem("timer");
+
+    if (savedProjectId && savedStartTime) {
+      const timeElapsed =
+        (Date.now() - new Date(savedStartTime).getTime()) / 1000;
+      setRunningProjectId(savedProjectId);
+      setStartTime(new Date(savedStartTime));
+      setTimer(parseInt(savedTimer) + Math.floor(timeElapsed));
+      const intervalId = setInterval(() => {
+        setTimer((prevTime) => prevTime + 1);
+      }, 1000);
+      setTimerId(intervalId);
     }
-  }, [tab, sortBy, sortOrder, dispatch, router]);
+
+    return () => {
+      if (timerId) {
+        clearInterval(timerId);
+      }
+    };
+  }, []);
 
   const startTimer = (projectId) => {
+    const currentStartTime = new Date();
     setRunningProjectId(projectId);
-    setStartTime(new Date());
+    setStartTime(currentStartTime);
     const intervalId = setInterval(() => {
       setTimer((prevTime) => prevTime + 1);
     }, 1000);
     setTimerId(intervalId);
+
+    localStorage.setItem("runningProjectId", projectId);
+    localStorage.setItem("startTime", currentStartTime);
+    localStorage.setItem("timer", 0);
   };
 
   const handleTaskNameSubmit = () => {
@@ -93,14 +110,14 @@ function Page() {
 
   const formatTime = (time) => {
     const minutes = Math.floor(time / 60);
-    const seconds = time % 60;
+    const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
   };
 
   const handleTime = async (projectId) => {
     try {
       if (!projectDescription.trim()) {
-        toast.error("Please Briefly Describe What you are doing ! ");
+        toast.error("Please Briefly Describe What you are doing!");
         return;
       }
 
@@ -133,14 +150,17 @@ function Page() {
       dispatch(setProjectDescription(""));
       setTimer(0);
 
-      toast.success("Tracked successfully !");
+      localStorage.removeItem("runningProjectId");
+      localStorage.removeItem("startTime");
+      localStorage.removeItem("timer");
+
+      toast.success("Tracked successfully!");
     } catch (error) {
       toast.error(
         error?.response?.data?.errors || "Failed to record time entry"
       );
     }
   };
-
   return (
     <div className="max-w-[1440px] w-full px-[50px] py-[32px]">
       <h1 className="text-[21px] leading-[24px] font-[700] text-[#404040]">
