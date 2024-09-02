@@ -150,6 +150,7 @@ function Page() {
             },
           }
         );
+        
         if (response) {
           const projectAll = response.data;
 

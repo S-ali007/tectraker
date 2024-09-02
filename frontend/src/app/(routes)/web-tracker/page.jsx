@@ -21,11 +21,11 @@ function Page() {
   const [timer, setTimer] = useState(0);
   const [startTime, setStartTime] = useState(null);
   const [timerId, setTimerId] = useState(null);
-  const [setSelectedProjectId] = useState(null);
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
   const dispatch = useDispatch();
   const router = useRouter();
 
-  const { projects, projectDescription } = useSelector(
+  const { projects, projectDescription, taskDuration } = useSelector(
     (state) => state.project
   );
 
