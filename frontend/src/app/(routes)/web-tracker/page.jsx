@@ -226,11 +226,11 @@ function Page() {
                         </defs>
                       </svg>
                     </div>
-                    <div >
+                    <div>
                       <h1 className="text-[17px] text-[#404040] w-[58px]">
                         {item.name}
                       </h1>
-                      <p className="text-[11px] text-[#acb3bb] ">
+                      <p className="text-[11px] text-[#acb3bb] w-full ">
                         {runningProjectId === item._id
                           ? `Working on: ${projectDescription}`
                           : latestTimeEntry &&
@@ -260,11 +260,11 @@ function Page() {
 
                   <div
                     className={
-                      "max-w-[190px] w-full flex justify-center gap-[20px] items-center"
+                      "    flex justify-center gap-[20px] items-center  max-w-[160px] w-full pl-[8px]"
                     }
                   >
                     {runningProjectId === item._id && (
-                      <div className="text-green-500 w-full max-w-[100px]">
+                      <div className="text-green-500 w-full max-w-[100px] ">
                         {formatTime(timer)}
                       </div>
                     )}
@@ -272,8 +272,8 @@ function Page() {
                       <button onClick={() => handleTime(item._id)}>
                         <svg
                           fill="#ff0000"
-                          height="30px"
-                          width="30px"
+                          height="40px"
+                          width="40px"
                           viewBox="0 0 512 512"
                           stroke="#ff0000"
                         >
@@ -294,8 +294,8 @@ function Page() {
                       <button onClick={() => startTimer(item._id)}>
                         <svg
                           fill="#00c386"
-                          height="30px"
-                          width="30px"
+                          height="40px"
+                          width="40px"
                           viewBox="0 0 512 512"
                           stroke="#00c386"
                         >
