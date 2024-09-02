@@ -6,7 +6,6 @@ import {
   setTimeEntriesForProject,
 } from "@/app/features/projectSlice";
 import MyActivites from "@/assets/icons/MyActivites";
-import WebTracker from "@/assets/icons/WebTracker";
 import Cookies from "js-cookie";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
@@ -41,7 +40,31 @@ function Page() {
   );
 
   const actionRef = useRef(null);
+  useEffect(() => {
+    const fetchProjects = async () => {
+      const token = Cookies.get("accessToken");
+      if (!token) return router.push("/login");
 
+      try {
+        const response = await api.get(
+          `/api/v1/project/projects?sort-by=${sortBy}&sort-order=${sortOrder}`,
+          {
+            headers: {
+              Authorization: token,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        dispatch(setAllProjects(response.data));
+      } catch (error) {
+        toast.error(error?.response?.data?.errors || "An error occurred");
+      }
+    };
+
+    if (projects.length === 0) {
+      fetchProjects();
+    }
+  }, [sortBy, sortOrder, dispatch, router, projects]);
   const formatTime = (time) => {
     const minutes = Math.floor(time / 60);
     const seconds = time % 60;

@@ -25,7 +25,7 @@ function Page() {
   const dispatch = useDispatch();
   const router = useRouter();
 
-  const { projects, projectDescription, taskDuration } = useSelector(
+  const { projects, projectDescription } = useSelector(
     (state) => state.project
   );
 
