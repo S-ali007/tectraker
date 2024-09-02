@@ -3,7 +3,7 @@ import React from "react";
 
 function page() {
   return (
-    <div className="max-w-[1440px] w-full px-[50px] py-[32px]">
+    <div className="w-full px-[50px] py-[32px]">
       <h1 className="text-[21px] leading-[24px] font-[700] text-[#404040]">
         Reports
       </h1>

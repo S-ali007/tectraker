@@ -36,12 +36,10 @@ function Page() {
   };
 
   useEffect(() => {
-    const token = Cookies.get("accessToken");
-    if (!token) {
-      return router.push("/login");
-    }
-
     const fetchProjects = async () => {
+      const token = Cookies.get("accessToken");
+      if (!token) return router.push("/login");
+
       try {
         const response = await api.get(
           `/api/v1/project/projects?sort-by=${sortBy}&sort-order=${sortOrder}`,
@@ -52,17 +50,16 @@ function Page() {
             },
           }
         );
-        if (response) {
-          const projectAll = response.data;
-          dispatch(setAllProjects(projectAll));
-        }
+        dispatch(setAllProjects(response.data));
       } catch (error) {
         toast.error(error?.response?.data?.errors || "An error occurred");
       }
     };
 
-    fetchProjects();
-  }, [sortBy, sortOrder, dispatch, router]);
+    if (projects.length === 0) {
+      fetchProjects();
+    }
+  }, [sortBy, sortOrder, dispatch, router, projects]);
 
   useEffect(() => {
     const savedProjectId = localStorage.getItem("runningProjectId");
@@ -162,7 +159,7 @@ function Page() {
     }
   };
   return (
-    <div className="max-w-[1440px] w-full px-[50px] py-[32px]">
+    <div className=" w-full px-[50px] py-[32px]">
       <h1 className="text-[21px] leading-[24px] font-[700] text-[#404040]">
         Web Tracker
       </h1>
@@ -199,7 +196,7 @@ function Page() {
               return (
                 <div
                   key={item._id}
-                  className="max-w-[1354px] w-full p-[10px] border-t border-[#e6e9ed] flex"
+                  className=" w-full p-[10px] border-t border-[#e6e9ed] flex"
                 >
                   <div className="flex items-center gap-[30px] w-full">
                     <div className="project_icon bg-[#c2c7cd] max-w-[40px] w-full flex justify-center items-center p-2 rounded-[50%]">
@@ -261,9 +258,15 @@ function Page() {
                     )}
                   </div>
 
-                  <div className="max-w-[190px] w-full flex justify-center gap-[20px] items-center">
+                  <div
+                    className={
+                      "max-w-[190px] w-full flex justify-center gap-[20px] items-center"
+                    }
+                  >
                     {runningProjectId === item._id && (
-                      <div className="text-green-500 w-full max-w-[100px]">{formatTime(timer)}</div>
+                      <div className="text-green-500 w-full max-w-[100px]">
+                        {formatTime(timer)}
+                      </div>
                     )}
                     {runningProjectId === item._id ? (
                       <button onClick={() => handleTime(item._id)}>

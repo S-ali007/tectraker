@@ -182,7 +182,7 @@ function ProjectListPage() {
     }
   }, [tab, sortBy, sortOrder, dispatch, router]);
   return (
-    <div className="max-w-[1440px] w-full px-[50px] py-[32px] ">
+    <div className=" w-full px-[50px] py-[32px] ">
       <div className="w-full flex">
         <h1 className="w-full text-[21px] leading-[24px] font-[700] text-[#404040] ">
           Projects
@@ -364,7 +364,7 @@ function ProjectListPage() {
             {projects.map((item, id) => (
               <div
                 key={id}
-                className="max-w-[1354px] w-full p-[10px] border-b border-[#e6e9ed]  flex"
+                className=" w-full p-[10px] border-b border-[#e6e9ed]  flex"
               >
                 <Link
                   href={`/projects/edit?id=${item._id}`}
@@ -640,7 +640,7 @@ function ProjectListPage() {
             {archiveProjects?.map((item, id) => (
               <div
                 key={id}
-                className="max-w-[1354px] w-full p-[10px] border-b border-[#e6e9ed]  flex"
+                className=" w-full p-[10px] border-b border-[#e6e9ed]  flex"
               >
                 <Link
                   href={`/projects/edit?id=${item._id}`}

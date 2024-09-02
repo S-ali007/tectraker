@@ -14,10 +14,8 @@ const ClientProvider = ({ children }) => {
   return (
     <Provider store={store}>
       <ProtectedRoute>
-        <div className="mx-auto max-w-[1630px] w-full flex">
-          <LandingPage />
-          {children}
-        </div>
+        <LandingPage />
+        <div className=" w-full flex">{children}</div>
       </ProtectedRoute>
     </Provider>
   );
