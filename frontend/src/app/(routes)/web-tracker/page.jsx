@@ -111,7 +111,7 @@ function Page() {
   const formatTime = (time) => {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+    return `${minutes} min ${seconds < 10 ? "0" : ""}${seconds} sec`;
   };
 
   const handleTime = async (projectId) => {
@@ -233,7 +233,7 @@ function Page() {
                       <h1 className="text-[17px] text-[#404040]">
                         {item.name}
                       </h1>
-                      <p className="text-[11px] text-[#acb3bb]">
+                      <p className="text-[11px] text-[#acb3bb] ">
                         {runningProjectId === item._id
                           ? `Working on: ${projectDescription}`
                           : latestTimeEntry &&
@@ -261,9 +261,9 @@ function Page() {
                     )}
                   </div>
 
-                  <div className="max-w-[80px] w-full flex justify-center gap-[20px] items-center">
+                  <div className="max-w-[190px] w-full flex justify-center gap-[20px] items-center">
                     {runningProjectId === item._id && (
-                      <div className="text-green-500">{formatTime(timer)}</div>
+                      <div className="text-green-500 w-full max-w-[100px]">{formatTime(timer)}</div>
                     )}
                     {runningProjectId === item._id ? (
                       <button onClick={() => handleTime(item._id)}>
