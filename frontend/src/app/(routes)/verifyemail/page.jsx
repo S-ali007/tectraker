@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
 import { verifyEmail } from "@/app/features/authSlice";
 import Cookies from "js-cookie";
+import Loader from "./loading";
 
 export default function VerifyEmailPage() {
   const router = useRouter();
@@ -16,6 +17,7 @@ export default function VerifyEmailPage() {
   const [verified, setVerified] = useState(false);
   const [error, setError] = useState(false);
   const [redirectPath, setRedirectPath] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const tokenFromParams = params.get("token");
@@ -29,6 +31,7 @@ export default function VerifyEmailPage() {
   useEffect(() => {
     if (token) {
       const verifyUserEmail = async () => {
+        setLoading(true);
         try {
           const response = await api.post("/api/v1/users/verifyemail", {
             token,
@@ -43,6 +46,8 @@ export default function VerifyEmailPage() {
           toast.error(error?.response?.data?.errors || "Verification failed");
           setError(true);
           setRedirectPath("/login");
+        } finally {
+          setLoading(false);
         }
       };
 
@@ -58,16 +63,7 @@ export default function VerifyEmailPage() {
 
   return (
     <div className="w-full mx-auto flex flex-col items-center justify-center min-h-screen py-2">
-      {verified && (
-        <div className="flex flex-col w-full justify-center items-center mt-5 gap-5">
-          <h2 className="text-2xl">Email Verified Successfully</h2>
-        </div>
-      )}
-      {error && (
-        <div className="flex flex-col w-full justify-center items-center mt-5 gap-5">
-          <h2 className="text-2xl text-red-500">Verification Error</h2>
-        </div>
-      )}
+      {loading && <Loader />}
     </div>
   );
 }

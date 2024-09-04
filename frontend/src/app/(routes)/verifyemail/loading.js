@@ -1,10 +1,17 @@
-import "./characterstyle.css"
-function page() {
-  return (
-    <div className='flex justify-center items-center h-screen  w-full '>
-     <div className="loader"></div>
-    </div>
-  )
-}
+import React from 'react';
+import './characterstyle.css'; 
 
-export default page
+const Loader = () => {
+  return (
+    <div className="🤚">
+      <div className="👉"></div>
+      <div className="👉"></div>
+      <div className="👉"></div>
+      <div className="👉"></div>
+      <div className="🌴"></div>
+      <div className="👍"></div>
+    </div>
+  );
+};
+
+export default Loader;

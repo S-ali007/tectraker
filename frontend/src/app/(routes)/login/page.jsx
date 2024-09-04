@@ -20,7 +20,11 @@ export default function LoginPage() {
   });
   const [buttonDisabled, setButtonDisabled] = useState(true);
 
+  const [loading, setLoading] = useState(false);
+
   const onLogin = async () => {
+    setLoading(true);
+
     try {
       const res = await api.post("/api/v1/users/login", user);
 
@@ -40,9 +44,10 @@ export default function LoginPage() {
         error?.response?.data?.errors ||
           "An unexpected error occurred. Please try again."
       );
+    } finally {
+      setLoading(false);
     }
   };
-
   useEffect(() => {
     setButtonDisabled(!(user.email.length > 0 && user.password.length > 0));
   }, [user]);
@@ -93,13 +98,13 @@ export default function LoginPage() {
         <button
           onClick={onLogin}
           className={`${
-            buttonDisabled
-              ? "opacity-50"
+            loading
+              ? "opacity-50 cursor-not-allowed"
               : "opacity-100 hover:scale-105 font-proximaNova hover:opacity-90 transition-all duration-100 ease-linear"
           } bg-[#00C386] mx-auto max-w-[204px] px-[10px] text-[13px] leading-[16px] py-[10px] rounded-[5px] text-white w-full font-[600]`}
-          disabled={buttonDisabled}
+          disabled={loading}
         >
-          Log In
+          {loading ? "Logging in..." : "Log In"}
         </button>
         <div>
           <div className="w-full flex justify-center font-[700]">OR</div>
