@@ -150,7 +150,7 @@ function Page() {
             },
           }
         );
-        
+
         if (response) {
           const projectAll = response.data;
 
@@ -423,7 +423,9 @@ function Page() {
                             </div>
                             <div className="max-w-[626px] w-full ">
                               <div className="text-[13px] text-[#303030]">
-                                {entry.task_name}
+                                {entry.task_name === ""
+                                  ? "Unamed Activity"
+                                  : entry.task_name}
                               </div>
                               <div className="w-full text-[#acb3bb] text-[11px]">
                                 {project.name}

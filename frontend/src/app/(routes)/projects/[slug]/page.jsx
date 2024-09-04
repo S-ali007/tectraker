@@ -22,6 +22,8 @@ const ProjectPage = () => {
   const dispatch = useDispatch();
   const { projectName, teamMembers } = useSelector((state) => state.project);
   const [emailError, setEmailError] = useState(false);
+  const [loading, setLoading] = useState(false);
+
   const router = useRouter();
   useEffect(() => {
     const fetchProjectDetails = async () => {
@@ -65,6 +67,7 @@ const ProjectPage = () => {
       const token = Cookie.get("accessToken");
 
       if (!projectId) {
+        setLoading(true);
         dispatch(setCurrentStep("invite-team"));
         try {
           const response = await api.post(
@@ -86,6 +89,8 @@ const ProjectPage = () => {
           }
         } catch (error) {
           toast.error(error?.response?.data?.errors || "An error occurred");
+        } finally {
+          setLoading(false);
         }
       } else {
         handleUpdateProject();
@@ -172,16 +177,15 @@ const ProjectPage = () => {
           dispatch(
             setTeamMembers(response?.data?.data?.project?.teamMembers || [])
           );
-
-          console.log(response);
         }
 
         toast.success("Team Members Added Successfully");
         dispatch(resetProject());
         router.push("/projects?tab=active&sortBy=name&sortOrder=asc");
       } catch (error) {
-        console.error("Failed to add team members", error);
-        toast.error("Failed to add team members");
+        // console.log(error.response.data.errors);
+        // console.error("Failed to add team members", error);
+        toast.error(error.response.data.errors);
       }
     }
   };
@@ -315,21 +319,26 @@ const ProjectPage = () => {
         >
           <button
             onClick={handleCancel}
-            className="border max-w-[104px] px-[10px] text-[13px] leading-[16px] py-[10px] rounded-[5px] w-full"
+            className="border hover:scale-105 font-proximaNova hover:opacity-90 transition-all duration-100 ease-linear max-w-[104px] px-[10px] text-[13px] leading-[16px] py-[10px] rounded-[5px] w-full"
           >
             {tab === "general" ? "Cancel" : "Finish Later"}
           </button>
           {tab === "invite-team" && (
             <button
               onClick={handleSetting}
-              className="bg-gray-700 opacity-50 hover:opacity-100 border max-w-[204px] px-[10px] text-[13px] leading-[16px] text-[white] py-[10px] rounded-[5px] w-full"
+              className="bg-gray-700 opacity-100 hover:scale-105 font-proximaNova hover:opacity-90 transition-all duration-100 ease-linear border max-w-[204px] px-[10px] text-[13px] leading-[16px] text-[white] py-[10px] rounded-[5px] w-full"
             >
               Back to Project Settings
             </button>
           )}
           <button
             onClick={handleNext}
-            className={`bg-[#00C386] max-w-[204px] px-[10px] text-[13px] leading-[16px] py-[10px] rounded-[5px] text-white w-full ${
+            disabled={loading}
+            className={`bg-[#00C386] max-w-[204px] px-[10px]  ${
+              loading
+                ? "opacity-50 cursor-not-allowed"
+                : "opacity-100 hover:scale-105 font-proximaNova hover:opacity-90 transition-all duration-100 ease-linear"
+            }  text-[13px] leading-[16px] py-[10px] rounded-[5px] text-white w-full ${
               projectName === "" ? "opacity-50" : "opacity-100"
             }`}
           >

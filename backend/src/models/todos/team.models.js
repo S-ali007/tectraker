@@ -4,7 +4,12 @@ const Schema = mongoose.Schema;
 const teamMemberSchema = new Schema({
   project_id: { type: mongoose.Schema.Types.ObjectId, ref: "Project" },
   name: { type: String, required: true },
-  email: { type: String, required: true },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
+  },
   role: {
     type: String,
     enum: ["supervisor", "worker"],

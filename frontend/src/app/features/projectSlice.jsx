@@ -3,7 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   currentStep: "general",
   projectName: "",
-  projectDescription: "",
+  projectDescription: "Unnamed Activity",
   teamMembers: [{ name: "", email: "", role: "worker" }],
   projects: [],
   currentProjectId: null,

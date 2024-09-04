@@ -99,9 +99,22 @@ function Page() {
     localStorage.setItem("timer", 0);
   };
 
+  useEffect(() => {
+    const storedDescription = localStorage.getItem("projectDescription");
+    if (storedDescription) {
+      dispatch(setProjectDescription(storedDescription));
+    }
+  }, []);
+
   const handleTaskNameSubmit = () => {
-    if (projectDescription.trim() !== "") {
-      dispatch(setProjectDescription(projectDescription));
+    const trimmedDescription = projectDescription.trim();
+
+    if (trimmedDescription !== "") {
+      dispatch(setProjectDescription(trimmedDescription));
+      localStorage.setItem("projectDescription", trimmedDescription);
+    } else {
+      localStorage.removeItem("projectDescription");
+      dispatch(setProjectDescription(""));
     }
   };
 
@@ -113,11 +126,6 @@ function Page() {
 
   const handleTime = async (projectId) => {
     try {
-      if (!projectDescription.trim()) {
-        toast.error("Please Briefly Describe What you are doing!");
-        return;
-      }
-
       setSelectedProjectId(projectId);
       const endTime = new Date();
 

@@ -111,8 +111,13 @@ const addTeamMembers = asyncHandler(async (req, res) => {
         new ApiResponse(200, { project }, "Team Members added successfully")
       );
   } catch (error) {
-    console.error(error);
-    res.status(500).json(new ApiError(500, "Server error"));
+    if (error.code === 11000) {
+      res
+        .status(400)
+        .json(new ApiError(400, {}, "Duplicate team member detected"));
+    } else {
+      res.status(500).json(new ApiError(500, "Server error"));
+    }
   }
 });
 
