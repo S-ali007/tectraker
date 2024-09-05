@@ -168,7 +168,7 @@ function Page() {
   };
   return (
     <div className=" w-full px-[50px] py-[32px]">
-      <h1 className="text-[21px] leading-[24px] font-[700] text-[#404040]">
+        <h1 className="text-[21px] leading-[24px] font-[700] text-[#404040]">
         Web Tracker
       </h1>
 

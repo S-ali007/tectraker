@@ -33,12 +33,32 @@ function Page() {
 
   const [runningProjectId, setRunningProjectId] = useState(null);
   const dispatch = useDispatch();
+  const [checkedIds, setCheckedIds] = useState([]);
   const router = useRouter();
 
+  const handleCheckboxChange = (e) => {
+    const id = e.target.id;
+    const isChecked = e.target.checked;
+
+    setCheckedIds((prev) => {
+      if (isChecked) {
+        return [...prev, id];
+      } else {
+        return prev.filter((checkedId) => checkedId !== id);
+      }
+    });
+  };
+
+  const handleSubmit = () => {
+    const params = new URLSearchParams();
+    checkedIds.forEach((id) => params.append('id', id));
+
+    router.push(`/your-page?${params.toString()}`);
+  };
   const { projects, selectedProjects, timeEntriesForProjects } = useSelector(
     (state) => state.project
   );
-
+  const today = new Date();
   const actionRef = useRef(null);
   useEffect(() => {
     const fetchProjects = async () => {
@@ -55,16 +75,23 @@ function Page() {
             },
           }
         );
-        dispatch(setAllProjects(response.data));
+        if (response) {
+          dispatch(setAllProjects(response.data));
+        }
       } catch (error) {
         toast.error(error?.response?.data?.errors || "An error occurred");
       }
     };
 
-    if (projects.length === 0) {
+    if (
+      tab === "name" ||
+      tab === "most-tracked" ||
+      tab === "recently-tracked"
+    ) {
       fetchProjects();
     }
-  }, [sortBy, sortOrder, dispatch, router, projects]);
+  }, [tab, sortBy, sortOrder, dispatch, router]);
+
   const formatTime = (time) => {
     const minutes = Math.floor(time / 60);
     const seconds = time % 60;
@@ -96,6 +123,10 @@ function Page() {
       dispatch(setSelectedProjects([...selectedProjects, projectId]));
 
       try {
+        router.push(
+          `/my-activites?start=2024-09-02&end=2024-09-05&projects=${projectId}`
+        );
+
         const res = await api.get(`/api/v1/project/${projectId}/time-entries`);
 
         dispatch(
@@ -182,6 +213,9 @@ function Page() {
       document.removeEventListener("click", handleClickOutside, true);
     };
   }, []);
+
+  console.log(startDate, "startDatr", endDate);
+
   return (
     <div className=" w-full px-[50px] py-[32px]">
       <h1 className="text-[21px] leading-[24px] font-[700] text-[#404040]">
@@ -371,6 +405,7 @@ function Page() {
                   selectsStart
                   startDate={startDate}
                   endDate={endDate}
+                  maxDate={today}
                   inline
                 />
               </div>

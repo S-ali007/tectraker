@@ -97,7 +97,7 @@ function LandingPage() {
     {
       id: 2,
       title: "My Activites",
-      link: "/my-activites",
+      link: "/my-activites?start=2024-09-02&end=2024-09-05&projects=all",
       svg: (
         <svg
           width="24"
