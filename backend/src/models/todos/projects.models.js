@@ -9,9 +9,42 @@ const timeEntrySchema = new Schema(
     end_time: { type: Date },
     duration: { type: Number },
   },
+
   { timestamps: true }
 );
+const userAgentSchema = new Schema({
+  client: { type: String, required: true },
+  os_type: { type: String, required: true },
+  browser_type: { type: String, required: true },
+});
 
+const activitySchema = new Schema({
+  user_id: { type: String, required: true },
+  task_name: { type: String },
+  // offline: { type: Boolean, required: true },
+  // offline_type: { type: String, required: true },
+  // project_id: { type: String, required: true },
+  start_time: { type: Date, required: true },
+  end_time: { type: Date, required: true },
+  // abilities: [{ type: String, required: true }],
+  // user_agent: { type: userAgentSchema, required: true },
+  // changed_manually: { type: Boolean, required: true },
+  invoice_custom_id: { type: mongoose.Schema.Types.Mixed },
+  mouse_clicks: { type: Number, default: 0 },
+  keyboard_hits: { type: Number, default: 0 },
+  shot_ids: [{ type: mongoose.Schema.Types.Mixed }],
+  screenshot_count: { type: Number, default: 0 },
+  duration: { type: Number },
+  // project_name: { type: String, required: true },
+  last_shot: { type: mongoose.Schema.Types.Mixed },
+  shots: [{ type: mongoose.Schema.Types.Mixed }],
+});
+
+const dateSchema = new Schema({
+  date: { type: String, required: true },
+  total: { type: Number, required: true },
+  activities: [activitySchema],
+});
 const projectSchema = new Schema(
   {
     id: Number,
@@ -76,7 +109,7 @@ const projectSchema = new Schema(
         ref: "Team",
       },
     ],
-    timeEntries: [timeEntrySchema],
+    dates: [dateSchema],
   },
   { timestamps: true }
 );

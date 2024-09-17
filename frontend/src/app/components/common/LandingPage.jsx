@@ -237,8 +237,8 @@ function LandingPage() {
         </Link>
         <div className="flex flex-col gap-[10px]">
           {maindata.map((item) => {
-            const currentPath = path.split("r")[0];
-            const linkPath = item.link.split("r")[0];
+            const currentPath = path.split("t")[0];
+            const linkPath = item.link.split("t")[0];
 
             const isActive = currentPath === linkPath;
 

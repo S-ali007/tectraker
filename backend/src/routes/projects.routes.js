@@ -16,7 +16,9 @@ const { verifyJwt } = require("../middlewares/auth.middleware");
 const router = Router();
 
 router.route("/").post(verifyJwt, createProject);
-router.get("/projects?", verifyJwt, getAllProjects);
+
+router.get("/projects", verifyJwt, getAllProjects);
+router.get("/user/my-activites", verifyJwt, getTimeEntries);
 
 router
   .route("/:id")
@@ -26,9 +28,9 @@ router
 
 router.post("/:id/team-members", verifyJwt, addTeamMembers);
 router.put("/:id/team-members", verifyJwt, updateTeamMembers);
+
 router.put("/:id/archive", verifyJwt, archiveProject);
 
-router.post("/:id/time-entries", addTimeEntry);
-router.get("/:id/time-entries", getTimeEntries);
+router.post("/:id/time-entries", verifyJwt, addTimeEntry);
 
 module.exports = router;

@@ -126,19 +126,28 @@ function Page() {
 
   const handleTime = async (projectId) => {
     try {
+      const token = Cookies.get("accessToken");
+
       setSelectedProjectId(projectId);
       const endTime = new Date();
 
-      const res = await api.post(`/api/v1/project/${projectId}/time-entries`, {
-        user_id: projectId,
-        task_name: projectDescription,
-        start_time: startTime,
-        end_time: endTime,
-      });
+      const res = await api.post(
+        `/api/v1/project/${projectId}/time-entries`,
+        {
+          user_id: projectId,
+          task_name: projectDescription,
+          start_time: startTime,
+          end_time: endTime,
+        },
+        {
+          headers: {
+            Authorization: token,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      dispatch(setTaskDuration(res.data.data.activties));
 
-      dispatch(setTaskDuration(res.data.data.project.timeEntries));
-
-      const token = Cookies.get("accessToken");
       const updatedProjects = await api.get(
         `/api/v1/project/projects?sort-by=${sortBy}&sort-order=${sortOrder}`,
         {
@@ -168,7 +177,7 @@ function Page() {
   };
   return (
     <div className=" w-full px-[50px] py-[32px]">
-        <h1 className="text-[21px] leading-[24px] font-[700] text-[#404040]">
+      <h1 className="text-[21px] leading-[24px] font-[700] text-[#404040]">
         Web Tracker
       </h1>
 

@@ -5,14 +5,14 @@ import {
   setSelectedProjects,
   setTimeEntriesForProject,
 } from "@/app/features/projectSlice";
-import MyActivites from "@/assets/icons/MyActivites";
 import Cookies from "js-cookie";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
-import DatePicker from "react-datepicker";
 import toast, { Toaster } from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import "react-datepicker/dist/react-datepicker.css";
+import MyActivites from "@/assets/icons/MyActivites";
+import DatePicker from "react-datepicker";
 import {
   addDays,
   startOfWeek,
@@ -23,43 +23,46 @@ import {
 
 function Page() {
   const searchParams = useSearchParams();
-  const tab = searchParams.get("sort-by");
+  const router = useRouter();
+
   const sortBy = searchParams.get("sort-by") || "name";
   const sortOrder = searchParams.get("sort-order") || "asc";
+  const projectIdsFromParams = searchParams.get("projects")?.split(",") || [];
+
   const [activeAction, setActiveAction] = useState(false);
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
+  const [singleDate, setSingleDate] = useState(null);
   const [isDateDropdownOpen, setIsDateDropdownOpen] = useState(false);
+  const [isSingleDate, setIsSingleDate] = useState(false);
+  const [filteredProject, setFilteredProject] = useState(null);
 
-  const [runningProjectId, setRunningProjectId] = useState(null);
   const dispatch = useDispatch();
-  const [checkedIds, setCheckedIds] = useState([]);
-  const router = useRouter();
-
-  const handleCheckboxChange = (e) => {
-    const id = e.target.id;
-    const isChecked = e.target.checked;
-
-    setCheckedIds((prev) => {
-      if (isChecked) {
-        return [...prev, id];
-      } else {
-        return prev.filter((checkedId) => checkedId !== id);
-      }
-    });
-  };
-
-  const handleSubmit = () => {
-    const params = new URLSearchParams();
-    checkedIds.forEach((id) => params.append('id', id));
-
-    router.push(`/your-page?${params.toString()}`);
-  };
   const { projects, selectedProjects, timeEntriesForProjects } = useSelector(
     (state) => state.project
   );
-  const today = new Date();
   const actionRef = useRef(null);
+  const today = Date.now();
+  const startQuery = startDate ? startDate.toLocaleDateString("en-GB") : "";
+  const endQuery = endDate ? endDate.toLocaleDateString("en-GB") : "";
+  const formatDate = (dateString) => {
+    const options = { month: "long", day: "numeric" };
+    return new Date(dateString).toLocaleDateString("en-GB", options);
+  };
+  const formatTimeRange = (start, end) => {
+    const formatTime = (dateStr) => {
+      const date = new Date(dateStr);
+      const hours = date.getUTCHours();
+      const minutes = date.getUTCMinutes();
+      const ampm = hours <= 12 ? "pm" : "am";
+      const formattedHours = hours % 12 || 12;
+      const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
+      return `${formattedHours}:${formattedMinutes}${ampm}`;
+    };
+
+    return `${formatTime(start)} — ${formatTime(end)}`;
+  };
+
   useEffect(() => {
     const fetchProjects = async () => {
       const token = Cookies.get("accessToken");
@@ -77,25 +80,135 @@ function Page() {
         );
         if (response) {
           dispatch(setAllProjects(response.data));
+
+          const selectedProjectsFromParams = response.data.filter((project) =>
+            projectIdsFromParams.includes(project._id)
+          );
+          dispatch(
+            setSelectedProjects(selectedProjectsFromParams.map((p) => p._id))
+          );
         }
       } catch (error) {
         toast.error(error?.response?.data?.errors || "An error occurred");
       }
     };
 
-    if (
-      tab === "name" ||
-      tab === "most-tracked" ||
-      tab === "recently-tracked"
-    ) {
-      fetchProjects();
-    }
-  }, [tab, sortBy, sortOrder, dispatch, router]);
+    fetchProjects();
+  }, [sortBy, sortOrder, dispatch, router]);
 
-  const formatTime = (time) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = time % 60;
-    return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+  const handleDeselectSelect = async () => {
+    dispatch(
+      setSelectedProjects(
+        selectedProjects.length === projects.length
+          ? []
+          : projects.map((project) => project._id)
+      )
+    );
+
+    router.push(
+      `/my-activites?start=${startQuery}&end=${endQuery}&projects=${
+        selectedProjects.length > 0
+          ? "none"
+          : projects.map((project) => project._id).join("-")
+      }`
+    );
+    if (selectedProjects.length <= 0) {
+      try {
+        const token = Cookies.get("accessToken");
+        const res = await api.get(
+          `/api/v1/project/user/my-activites?start=${startQuery}&end=${endQuery}&projects=${projects
+            .map((project) => project._id)
+            .join("-")}`,
+          {
+            headers: {
+              Authorization: token,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        const filtered = res.data.filteredProjects;
+        setFilteredProject(filtered);
+        console.log(filteredProject, "dddddddddd");
+        // dispatch(
+        //   setTimeEntriesForProject([
+        //     ...timeEntriesForProjects,
+        //     { projectId, timeEntries: res.data.timeEntries },
+        //   ])
+        // );
+      } catch (error) {
+        toast.error("Failed to fetch time entries.");
+        console.error(error);
+      }
+    }
+  };
+
+  const toggleProjectSelection = async (projectId) => {
+    let updatedSelectedProjects;
+
+    if (selectedProjects.includes(projectId)) {
+      updatedSelectedProjects = selectedProjects.filter(
+        (id) => id !== projectId
+      );
+    } else {
+      updatedSelectedProjects = [...selectedProjects, projectId];
+    }
+
+    dispatch(setSelectedProjects(updatedSelectedProjects));
+
+    const updatedQueryParams = new URLSearchParams(searchParams);
+    updatedQueryParams.set("projects", updatedSelectedProjects.join("-"));
+
+    if (!updatedSelectedProjects.length) {
+      updatedQueryParams.delete("projects");
+    }
+
+    router.push(
+      `/my-activites?start=${startQuery}&end=${endQuery}&projects=${
+        updatedSelectedProjects.length > 0
+          ? updatedSelectedProjects.join("-")
+          : "none"
+      }`
+    );
+
+    if (!selectedProjects.includes(projectId)) {
+      try {
+        const token = Cookies.get("accessToken");
+        const res = await api.get(
+          `/api/v1/project/user/my-activites?start=${startQuery}&end=${endQuery}&projects=${
+            updatedSelectedProjects.length > 0
+              ? updatedSelectedProjects.join("-")
+              : "none"
+          }`,
+          {
+            headers: {
+              Authorization: token,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        const filtered = res.data.data.filterProjects;
+        setFilteredProject(filtered);
+        console.log(filtered, "dddddddddd");
+
+        // dispatch(
+        //   setTimeEntriesForProject([
+        //     ...timeEntriesForProjects,
+        //     { projectId, timeEntries: res.data.timeEntries },
+        //   ])
+        // );
+      } catch (error) {
+        toast.error("Failed to fetch time entries.");
+        console.error(error);
+      }
+    } else {
+      dispatch(
+        setTimeEntriesForProject(
+          timeEntriesForProjects.filter(
+            (entry) => entry.projectId !== projectId
+          )
+        )
+      );
+    }
   };
 
   const handleActions = () => {
@@ -107,105 +220,6 @@ function Page() {
       setActiveAction(null);
     }
   };
-  const toggleProjectSelection = async (projectId) => {
-    if (selectedProjects.includes(projectId)) {
-      dispatch(
-        setSelectedProjects(selectedProjects.filter((id) => id !== projectId))
-      );
-      dispatch(
-        setTimeEntriesForProject(
-          timeEntriesForProjects.filter(
-            (entry) => entry.projectId !== projectId
-          )
-        )
-      );
-    } else {
-      dispatch(setSelectedProjects([...selectedProjects, projectId]));
-
-      try {
-        router.push(
-          `/my-activites?start=2024-09-02&end=2024-09-05&projects=${projectId}`
-        );
-
-        const res = await api.get(`/api/v1/project/${projectId}/time-entries`);
-
-        dispatch(
-          setTimeEntriesForProject([
-            ...timeEntriesForProjects,
-            { projectId, timeEntries: res.data },
-          ])
-        );
-      } catch (error) {
-        console.error("Error fetching time entries:", error);
-        toast.error("Failed to fetch time entries.");
-      }
-    }
-  };
-
-  const options = { month: "long", day: "numeric" };
-
-  const handleCustomRange = (rangeType) => {
-    switch (rangeType) {
-      case "currentWeek":
-        setStartDate(startOfWeek(new Date()));
-        setEndDate(endOfWeek(new Date()));
-        break;
-      case "last7Days":
-        setStartDate(addDays(new Date(), -7));
-        setEndDate(new Date());
-        break;
-      case "currentMonth":
-        setStartDate(startOfMonth(new Date()));
-        setEndDate(endOfMonth(new Date()));
-        break;
-      default:
-        break;
-    }
-    setIsDateDropdownOpen(false);
-  };
-
-  useEffect(() => {
-    const token = Cookies.get("accessToken");
-    if (!token) {
-      return router.push("/login");
-    }
-
-    const fetchProjects = async () => {
-      try {
-        const response = await api.get(
-          `/api/v1/project/projects?sort-by=${sortBy}&sort-order=${sortOrder}`,
-          {
-            headers: {
-              Authorization: token,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        if (response) {
-          const projectAll = response.data;
-
-          if (
-            tab === "name" ||
-            tab === "most-tracked" ||
-            tab === "recently-tracked"
-          ) {
-            dispatch(setAllProjects(projectAll));
-          }
-        }
-      } catch (error) {
-        toast.error(error?.response?.data?.errors || "An error occurred");
-      }
-    };
-
-    if (
-      tab === "name" ||
-      tab === "most-tracked" ||
-      tab === "recently-tracked"
-    ) {
-      fetchProjects();
-    }
-  }, [tab, sortBy, sortOrder, dispatch, router]);
 
   useEffect(() => {
     document.addEventListener("click", handleClickOutside, true);
@@ -214,7 +228,53 @@ function Page() {
     };
   }, []);
 
-  console.log(startDate, "startDatr", endDate);
+  const handleCustomRange = (rangeType) => {
+    switch (rangeType) {
+      case "currentWeek":
+        setStartDate(startOfWeek(new Date()));
+        setEndDate(new Date());
+        break;
+      case "last7Days":
+        setStartDate(addDays(new Date(), -7));
+        setEndDate(new Date());
+        break;
+      case "currentMonth":
+        setStartDate(startOfMonth(new Date()));
+        setEndDate(new Date());
+        break;
+      default:
+        break;
+    }
+    setIsDateDropdownOpen(false);
+  };
+
+  const handleDatechange = async (date) => {
+    setStartDate(date);
+    router.push(
+      `/my-activites?start=${startQuery}&end=${endQuery}&projects=${
+        selectedProjects.length > 0 ? projectIdsFromParams : "none"
+      }`
+    );
+
+    try {
+      const token = Cookies.get("accessToken");
+      const res = await api.get(
+        `/api/v1/project/user/my-activites?start=${startQuery}&end=${endQuery}&projects=${
+          selectedProjects.length > 0 ? projectIdsFromParams : "none"
+        }`,
+        {
+          headers: {
+            Authorization: token,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const filtered = res.data.data.filterProjects;
+      setFilteredProject(filtered);
+    } catch (error) {
+      toast.error("Please select project.");
+    }
+  };
 
   return (
     <div className=" w-full px-[50px] py-[32px]">
@@ -224,7 +284,9 @@ function Page() {
       <div className="w-full flex justify-between mt-[40px] items-center">
         <button
           onClick={() => handleActions()}
-          className="max-w-[180px] flex w-full px-[16px] py-[11px] bg-[#acb3bb] opacity-[0.3] rounded-[6px] border-[#f0f1f4] border justify-around items-center"
+          className={`max-w-[193px] flex w-full px-[16px] py-[11px]  ${
+            selectedProjects.length ? "opacity-100" : "opacity-[0.6]"
+          }   hover:bg-[#e7f4ff] bg-[#f0f1f4]  rounded-[6px] border-[#f0f1f4] border justify-around items-center`}
         >
           {/* svg */}
           <div>
@@ -258,8 +320,14 @@ function Page() {
             </svg>
           </div>
           {/* select */}
-          <div className="text-[14px] text-[#000] opacity-100">
-            Select Project{" "}
+          <div
+            className={`text-[14px] text-[#000] 
+              opacity-100
+             `}
+          >
+            {selectedProjects.length
+              ? `${selectedProjects.length} Projects Selected `
+              : "Select Project"}
           </div>
           {/* arrow */}
           <svg
@@ -283,20 +351,12 @@ function Page() {
         </button>
         {activeAction && (
           <div
-            className="absolute  mt-[190px] max-w-[240px] w-full p-[8px] bg-white rounded-md shadow-lg z-20"
+            className="absolute  mt-[180px] max-w-[240px] w-full p-[8px] bg-white rounded-md shadow-lg z-20"
             ref={actionRef}
           >
             <button
-              className="w-full text-left px-4 py-2  text-gray-700 hover:bg-gray-100 text-[13px]"
-              onClick={() =>
-                dispatch(
-                  setSelectedProjects(
-                    selectedProjects.length === projects.length
-                      ? []
-                      : projects.map((project) => project._id)
-                  )
-                )
-              }
+              className={`w-full text-left px-4 py-2  text-gray-700 hover:bg-gray-100 text-[14px] font-[600]`}
+              onClick={() => handleDeselectSelect()}
             >
               {selectedProjects.length === projects.length
                 ? "Deselect All Projects"
@@ -357,10 +417,7 @@ function Page() {
                 </g>{" "}
               </g>
             </svg>
-            {`${startDate.toLocaleDateString(
-              "en-GB",
-              options
-            )} — ${endDate.toLocaleDateString("en-GB", options)}`}
+            {`${formatDate(startDate)} — ${formatDate(endDate)}`}
             <svg
               className="-mr-1 ml-2 h-5 w-5"
               xmlns="http://www.w3.org/2000/svg"
@@ -400,6 +457,22 @@ function Page() {
                   </button>
                 </div>
                 <DatePicker
+                  selectsStart
+                  selected={isSingleDate ? singleDate : startDate}
+                  // onChange={
+                  //   isSingleDate
+                  //     ? setSingleDate
+                  //     : (dates) => handleDateChange(dates)
+                  // }
+                  // onChange={(date) => setStartDate(date)}
+                  onChange={(date) => handleDatechange(date)}
+                  startDate={startDate}
+                  endDate={endDate}
+                  // selectsRange={!isSingleDate}
+                  maxDate={today}
+                  inline
+                />
+                {/* <DatePicker
                   selected={startDate}
                   onChange={(date) => setStartDate(date)}
                   selectsStart
@@ -407,7 +480,7 @@ function Page() {
                   endDate={endDate}
                   maxDate={today}
                   inline
-                />
+                /> */}
               </div>
             </div>
           )}
@@ -433,47 +506,187 @@ function Page() {
 
             <div className="px-4 pt-4 bg-white rounded-lg shadow-md ">
               {selectedProjects.length > 0 ? (
-                selectedProjects.map((projectId) => {
-                  const project = projects.find(
-                    (proj) => proj._id === projectId
-                  );
-
+                filteredProject?.map((project, index) => {
                   return (
-                    <div key={projectId} className="mb-4">
-                      <ul className=" flex flex-col gap-[20px]">
-                        {project.timeEntries.map((entry, index) => (
-                          <li
-                            key={index}
-                            className="text-gray-600 flex py-[16px] px-[8px] border-y-[#e6e9ed] border-y"
-                          >
-                            <div className=" max-w-[144px] w-full">
-                              <div className="text-[13px]">
-                                {/* created at */}
-                                {/* at {entry.start_time} - {entry.end_time} */}
-                              </div>
-                              {/* less then a minute */}
-                              <div className="text-[#acb3bb] text-[11px]">
-                                {entry.duration}
-                              </div>
-                            </div>
-                            <div className="max-w-[626px] w-full ">
-                              <div className="text-[13px] text-[#303030]">
-                                {entry.task_name === ""
-                                  ? "Unamed Activity"
-                                  : entry.task_name}
-                              </div>
-                              <div className="w-full text-[#acb3bb] text-[11px]">
-                                {project.name}
-                              </div>
-                            </div>
-                            <div className="max-w-[144px] w-full ">
-                              <div className="text-[13px]">0 keyboard hits</div>
-                              <div className="w-full text-[#acb3bb] text-[11px]">
-                                0 mouseclicks
-                              </div>
-                            </div>
-                          </li>
-                        ))}
+                    <div key={index} className="mb-4">
+                      {/* <h2>{project.name}</h2> */}
+                      <ul className=" flex flex-col gap-[3px]">
+                        <div>{formatDate(project.date)}</div>
+                        <div>
+                          {project?.activities?.map((items) =>
+                            Object.values(items).map((entry, index) => {
+                              return (
+                                <li
+                                  key={index}
+                                  className="text-gray-600 flex gap-[20px] py-[16px] px-[8px] border-y-[#e6e9ed] border-y"
+                                >
+                                  <div className=" max-w-[144px] w-full">
+                                    <div className="text-[13px] text-[#404040] font-[600]">
+                                      {/* created at */}
+                                      at{" "}
+                                      {formatTimeRange(
+                                        entry.start_time,
+                                        entry.end_time
+                                      )}
+                                    </div>
+                                    {/* less then a minute */}
+                                    <div className="text-[#acb3bb] text-[11px]">
+                                      {entry.duration}
+                                    </div>
+                                  </div>
+                                  <div className=" w-full ">
+                                    <div className=" text-[#303030] text-[17px]">
+                                      {entry.task_name === ""
+                                        ? "Unamed Activity"
+                                        : entry.task_name}
+                                    </div>
+                                    <div className="w-full text-[#acb3bb] text-[11px]">
+                                      {project.name}
+                                    </div>
+                                  </div>
+                                  <div className="w-full max-w-[336px] flex gap-[25px]">
+                                    <div className="max-w-[144px] w-full ">
+                                      <div className="text-[13px]">
+                                        0 keyboard hits
+                                      </div>
+                                      <div className="w-full text-[#acb3bb] text-[11px]">
+                                        0 mouseclicks
+                                      </div>
+                                    </div>
+                                    {/* Web Tracker Activity */}
+                                    <div className="max-w-[15 2px] w-full flex">
+                                    <div className="max-w-[42px] w-full">
+                                        <svg
+                                          viewBox="0 0 50 50"
+                                          id="Message_And_Communication_Icons"
+                                          version="1.1"
+                                          fill="#000000"
+                                        >
+                                          <g
+                                            id="SVGRepo_bgCarrier"
+                                            stroke-width="0"
+                                          ></g>
+                                          <g
+                                            id="SVGRepo_tracerCarrier"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                          ></g>
+                                          <g id="SVGRepo_iconCarrier">
+                                            {" "}
+                                            <g>
+                                              {" "}
+                                              <g>
+                                                {" "}
+                                                <g>
+                                                  {" "}
+                                                  <path
+                                                    d="M36.7,12.3c2.3,3,3.7,6.7,3.7,10.7c0,9.6-7.8,17.4-17.4,17.4c-4,0-7.7-1.4-10.7-3.7 c3.2,4.1,8.1,6.7,13.7,6.7c9.6,0,17.4-7.8,17.4-17.4C43.4,20.4,40.8,15.5,36.7,12.3z"
+                                                    style={{ fill: "#4DE0F9" }}
+                                                  ></path>{" "}
+                                                </g>{" "}
+                                              </g>{" "}
+                                              <g>
+                                                {" "}
+                                                <g>
+                                                  {" "}
+                                                  <path
+                                                    d="M25,43c-9.9,0-18-8.1-18-18S15.1,7,25,7s18,8.1,18,18S34.9,43,25,43z M25,8.2 C15.7,8.2,8.2,15.7,8.2,25S15.7,41.8,25,41.8S41.8,34.3,41.8,25S34.3,8.2,25,8.2z"
+                                                    style={{ fill: "#0D5FC3" }}
+                                                  ></path>{" "}
+                                                </g>{" "}
+                                              </g>{" "}
+                                              <g>
+                                                {" "}
+                                                <g>
+                                                  {" "}
+                                                  <g>
+                                                    {" "}
+                                                    <path
+                                                      d="M15.6,32.8h-1.2c-0.3,0-0.6-0.3-0.6-0.6V19.4c0-0.3,0.3-0.6,0.6-0.6h13.8V20H15v11.6h0.6V32.8z"
+                                                      style={{
+                                                        fill: "#0D5FC3",
+                                                      }}
+                                                    ></path>{" "}
+                                                  </g>{" "}
+                                                </g>{" "}
+                                                <g>
+                                                  {" "}
+                                                  <g>
+                                                    {" "}
+                                                    <path
+                                                      d="M34.6,32.8H20.2v-1.2H34V20.5l-3.1,2l-0.6-1l4-2.5c0.2-0.1,0.4-0.1,0.6,0 c0.2,0.1,0.3,0.3,0.3,0.5v12.8C35.2,32.5,34.9,32.8,34.6,32.8z"
+                                                      style={{
+                                                        fill: "#0D5FC3",
+                                                      }}
+                                                    ></path>{" "}
+                                                  </g>{" "}
+                                                </g>{" "}
+                                                <g>
+                                                  {" "}
+                                                  <g>
+                                                    {" "}
+                                                    <rect
+                                                      height="1.2"
+                                                      style={{
+                                                        fill: "#0D5FC3",
+                                                      }}
+                                                      transform="matrix(0.8439 0.5366 -0.5366 0.8439 14.7176 -6.5462)"
+                                                      width="9.9"
+                                                      x="13.7"
+                                                      y="21.4"
+                                                    ></rect>{" "}
+                                                  </g>{" "}
+                                                </g>{" "}
+                                              </g>{" "}
+                                              <g>
+                                                {" "}
+                                                <g>
+                                                  {" "}
+                                                  <rect
+                                                    height="34.9"
+                                                    style={{ fill: "#0D5FC3" }}
+                                                    transform="matrix(0.7071 0.7071 -0.7071 0.7071 25 -10.3553)"
+                                                    width="1.2"
+                                                    x="24.4"
+                                                    y="7.5"
+                                                  ></rect>{" "}
+                                                </g>{" "}
+                                              </g>{" "}
+                                              <g>
+                                                {" "}
+                                                <g>
+                                                  {" "}
+                                                  <path
+                                                    d="M23.3,10.8l-0.1-1.2c0.6-0.1,1.2-0.1,1.8-0.1v1.2C24.4,10.7,23.9,10.8,23.3,10.8z"
+                                                    style={{ fill: "#4DE0F9" }}
+                                                  ></path>{" "}
+                                                </g>{" "}
+                                              </g>{" "}
+                                              <g>
+                                                {" "}
+                                                <g>
+                                                  {" "}
+                                                  <path
+                                                    d="M17,13.1l-0.7-1c1.5-1,3.1-1.7,4.8-2.2l0.3,1.2C19.9,11.6,18.4,12.2,17,13.1z"
+                                                    style={{ fill: "#4DE0F9" }}
+                                                  ></path>{" "}
+                                                </g>{" "}
+                                              </g>{" "}
+                                            </g>{" "}
+                                          </g>
+                                        </svg>
+                                      </div>
+                                      <div className="text-[11px] text-[#acb3bb] w-full flex items-center">
+                                        Web Tracker Activity
+                                      </div>
+                                      
+                                    </div>
+                                  </div>
+                                </li>
+                              );
+                            })
+                          )}
+                        </div>
                       </ul>
                     </div>
                   );

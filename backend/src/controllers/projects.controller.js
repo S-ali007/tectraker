@@ -183,7 +183,13 @@ const archiveProject = asyncHandler(async (req, res) => {
 const addTimeEntry = asyncHandler(async (req, res) => {
   try {
     const { user_id, task_name, start_time, end_time } = req.body;
-    const project = await Project.findById(user_id);
+
+    if (!user_id || !start_time) {
+      return res.status(400).json(new ApiError(400, "Missing required fields"));
+    }
+
+    const project = await Project.findById(req.params.id);
+
     if (!project) {
       return res.status(404).json(new ApiError(404, "Project not found"));
     }
@@ -192,7 +198,20 @@ const addTimeEntry = asyncHandler(async (req, res) => {
       ? (new Date(end_time) - new Date(start_time)) / 1000
       : null;
 
-    project.timeEntries.push({
+    const date = new Date(start_time).toISOString().split("T")[0];
+
+    let dateEntry = project.dates.find((entry) => entry.date === date);
+
+    if (!dateEntry) {
+      dateEntry = {
+        date,
+        total: 0,
+        activities: [],
+      };
+      project.dates.push(dateEntry);
+    }
+
+    dateEntry.activities.push({
       user_id,
       task_name,
       start_time,
@@ -202,36 +221,84 @@ const addTimeEntry = asyncHandler(async (req, res) => {
 
     await project.save();
 
+    const activities = project.dates
+      .filter((dateEntry) => dateEntry.date === date)
+      .flatMap((dateEntry) => dateEntry.activities);
+
     res
       .status(200)
-      .json(new ApiResponse(200, { project }, "Time Entry Added Successfully"));
+      .json(
+        new ApiResponse(200, { activities }, "Time Entry Added Successfully")
+      );
   } catch (error) {
+    console.error(error);
     res.status(500).json(new ApiError(500, "Server error"));
   }
 });
 
 const getTimeEntries = asyncHandler(async (req, res) => {
   try {
-    const { id } = req.params;
+    const { start, end, projects } = req.query;
 
-    const project = await Project.findById(id).select("timeEntries");
-    if (!project) {
+    const parseDate = (dateString) => {
+      const [day, month, year] = dateString.split("/");
+      return new Date(`${year}-${month}-${day}`);
+    };
+
+    const startDate = parseDate(start);
+    const endDate = parseDate(end);
+
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      return res.status(400).json({ error: "Invalid date format" });
+    }
+
+    endDate.setHours(23, 59, 59, 999);
+
+    const projectIds = projects ? projects.split("-") : [];
+
+    const projectsData = await Project.find(
+      {
+        _id: { $in: projectIds },
+      },
+      {
+        _id: 1,
+        name: 1,
+        dates: 1,
+      }
+    );
+
+    if (!projectsData || projectsData.length === 0) {
       return res.status(404).json(new ApiError(404, "Project not found"));
     }
 
-    res
-      .status(200)
-      .json(
-        new ApiResponse(
-          200,
-          { timeEntries: project.timeEntries },
-          "Time Entries Retrieved Successfully"
-        )
-      );
+    const groupedTimeEntries = {};
+
+    projectsData.forEach((project) => {
+      project.dates.forEach((dateEntry) => {
+        const entryDate = new Date(dateEntry.date).toISOString().split("T")[0];
+        if (entryDate >= startDate.toISOString().split("T")[0] && entryDate <= endDate.toISOString().split("T")[0]) {
+          if (!groupedTimeEntries[entryDate]) {
+            groupedTimeEntries[entryDate] = { date: entryDate, activities: [] };
+          }
+
+          groupedTimeEntries[entryDate].activities.push({
+            
+            ...dateEntry.activities
+          });
+        }
+      });
+    });
+
+    const filterProjects = Object.values(groupedTimeEntries);
+
+    res.status(200).json(new ApiResponse(200, { filterProjects }, "Time Entries Retrieved Successfully"));
   } catch (error) {
+    console.error(error);
     res.status(500).json(new ApiError(500, "Server error"));
   }
 });
+
+
 
 module.exports = {
   createProject,
