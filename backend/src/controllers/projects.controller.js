@@ -276,14 +276,16 @@ const getTimeEntries = asyncHandler(async (req, res) => {
     projectsData.forEach((project) => {
       project.dates.forEach((dateEntry) => {
         const entryDate = new Date(dateEntry.date).toISOString().split("T")[0];
-        if (entryDate >= startDate.toISOString().split("T")[0] && entryDate <= endDate.toISOString().split("T")[0]) {
+        if (
+          entryDate >= startDate.toISOString().split("T")[0] &&
+          entryDate <= endDate.toISOString().split("T")[0]
+        ) {
           if (!groupedTimeEntries[entryDate]) {
             groupedTimeEntries[entryDate] = { date: entryDate, activities: [] };
           }
 
           groupedTimeEntries[entryDate].activities.push({
-            
-            ...dateEntry.activities
+            ...dateEntry.activities,
           });
         }
       });
@@ -291,14 +293,117 @@ const getTimeEntries = asyncHandler(async (req, res) => {
 
     const filterProjects = Object.values(groupedTimeEntries);
 
-    res.status(200).json(new ApiResponse(200, { filterProjects }, "Time Entries Retrieved Successfully"));
+    res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { filterProjects },
+          "Time Entries Retrieved Successfully"
+        )
+      );
   } catch (error) {
     console.error(error);
     res.status(500).json(new ApiError(500, "Server error"));
   }
 });
 
+const deleteTask = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
 
+    if (!id) {
+      return res.status(400).json({ error: "Task ID is required" });
+    }
+
+    const project = await Project.findOne({ "dates.activities._id": id });
+
+    if (!project) {
+      return res.status(404).json(new ApiError(404, "Task not found"));
+    }
+
+    const updatedProject = await Project.findOneAndUpdate(
+      { "dates.activities._id": id },
+      {
+        $pull: { "dates.$[].activities": { _id: id } },
+      },
+      { new: true }
+    );
+
+    if (!updatedProject) {
+      return res.status(500).json(new ApiError(500, "Failed to delete task"));
+    }
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, updatedProject, "Task deleted successfully"));
+  } catch (error) {
+    console.error(error);
+    res.status(500).json(new ApiError(500, "Server error"));
+  }
+});
+
+const updateTask = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      task_name,
+      start_date,
+      duration,
+      worked_from,
+      worked_to,
+      project_name,
+    } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ error: "Task ID is required" });
+    }
+
+    if (!task_name) {
+      return res.status(400).json({ error: "Task name is required" });
+    }
+
+    const updatedProject = await Project.findOneAndUpdate(
+      { "dates.activities._id": id },
+      {
+        $set: {
+          "dates.$[].activities.$[activity].task_name": task_name,
+          // "dates.$[].activities.$[activity].description": description,
+          "dates.$[].activities.$[activity].start_time": start_date,
+          "dates.$[].activities.$[activity].duration": duration,
+          "dates.$[].activities.$[activity].worked_from": worked_from,
+          "dates.$[].activities.$[activity].worked_to": worked_to,
+        },
+      },
+      {
+        arrayFilters: [{ "activity._id": id }],
+        new: true,
+      }
+    );
+
+    if (!updatedProject) {
+      return res.status(404).json(new ApiError(404, "Task not found"));
+    }
+
+    if (project_name) {
+      updatedProject.name = project_name;
+      await updatedProject.save();
+    }
+
+    res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          updatedProject,
+          "Task and project updated successfully"
+        )
+      );
+  } catch (error) {
+    console.error(error);
+    res.status(500).json(new ApiError(500, "Server error"));
+  }
+});
 
 module.exports = {
   createProject,
@@ -311,4 +416,6 @@ module.exports = {
   archiveProject,
   addTimeEntry,
   getTimeEntries,
+  deleteTask,
+  updateTask,
 };

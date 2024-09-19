@@ -10,6 +10,8 @@ const {
   addTimeEntry,
   getTimeEntries,
   addTeamMembers,
+  deleteTask,
+  updateTask,
 } = require("../controllers/projects.controller");
 const { verifyJwt } = require("../middlewares/auth.middleware");
 
@@ -19,6 +21,8 @@ router.route("/").post(verifyJwt, createProject);
 
 router.get("/projects", verifyJwt, getAllProjects);
 router.get("/user/my-activites", verifyJwt, getTimeEntries);
+router.delete("/user/:id/my-activites", verifyJwt, deleteTask);
+router.put("/user/:id/my-activites", verifyJwt, updateTask);
 
 router
   .route("/:id")

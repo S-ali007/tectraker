@@ -22,6 +22,7 @@ import {
 } from "date-fns";
 import { format } from "date-fns";
 import ActivityMsg from "@/assets/icons/ActivityMsg";
+import YesAndNo from "@/app/components/common/YesAndNo";
 
 function Page() {
   const searchParams = useSearchParams();
@@ -38,6 +39,15 @@ function Page() {
   const [isDateDropdownOpen, setIsDateDropdownOpen] = useState(false);
   const [isSingleDate, setIsSingleDate] = useState(false);
   const [filteredProject, setFilteredProject] = useState(null);
+  const [actionDelete, setActionDelete] = useState(false);
+  const [actionUpdate, setActionUpdate] = useState(false);
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
+  const [dropDownUpdate, setDropDownUpdate] = useState(false);
+  const [projectName, setProjectName] = useState("");
+  const [activityDescription, setActivityDescription] = useState("");
+  const [duration, setDuration] = useState("");
+  const [workedFrom, setWorkedFrom] = useState("");
+  const [workedTo, setWorkedTo] = useState("");
 
   const dispatch = useDispatch();
   const { projects, selectedProjects, timeEntriesForProjects } = useSelector(
@@ -245,7 +255,6 @@ function Page() {
         );
         const filtered = res.data.data.filterProjects;
         setFilteredProject(filtered);
-        console.log(filtered, "dddddddddd");
       } catch (error) {
         toast.error("Failed to fetch time entries.");
         console.error(error);
@@ -271,7 +280,6 @@ function Page() {
     if (actionRef.current && !actionRef.current.contains(event.target)) {
       setActiveAction(null);
       setActive(null);
-      
     }
   };
 
@@ -331,12 +339,270 @@ function Page() {
       toast.error("Please select project.");
     }
   };
+  const handleDeleteProject = async () => {
+    const token = Cookies.get("accessToken");
 
+    try {
+      const response = await api.delete(
+        `/api/v1/project/user/${selectedProjectId}/my-activites`,
+        {
+          headers: {
+            Authorization: token,
+          },
+        }
+      );
+      console.log(response);
+      setActionDelete(false);
+
+      // if (response.status === 200) {
+      //   setActionDelete(false);
+      //   toast.success("Project Deleted successfully");
+      //   fetchProjects();
+      // }
+    } catch (error) {
+      toast.error(error);
+    }
+  };
+  const handleDelete = (projectId) => {
+    setSelectedProjectId(projectId);
+    setActionDelete(true);
+  };
+
+  const handleUpdateProject = async () => {
+    const token = Cookies.get("accessToken");
+    try {
+      const response = await api.put(
+        `/api/v1/project/user/${selectedProjectId}/my-activites`,
+        { task_name: selectedProjectId },
+        {
+          headers: {
+            Authorization: token,
+          },
+        }
+      );
+      setActionUpdate(false);
+
+      // if (response.status === 200) {
+      //   setActionDelete(false);
+      //   toast.success("Project Deleted successfully");
+      //   fetchProjects();
+      // }
+    } catch (error) {
+      toast.error(error);
+    }
+  };
+  const handleUpdate = (projectId) => {
+    setSelectedProjectId(projectId);
+
+    setActionUpdate(true);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const formData = {
+      projectName,
+      activityDescription,
+      duration,
+      startDate,
+      endDate,
+    };
+
+    const token = Cookies.get("accessToken");
+    try {
+      const response = await api.put(
+        `/api/v1/project/user/${selectedProjectId}/my-activites`,
+        {
+          project_name: projectName,
+          task_name: activityDescription,
+          start_date: startDate,
+          duration: duration,
+        },
+        {
+          headers: {
+            Authorization: token,
+          },
+        }
+      );
+      setActionUpdate(false);
+      console.log(response);
+      // if (response.status === 200) {
+      //   setActionDelete(false);
+      //   toast.success("Project Deleted successfully");
+      //   fetchProjects();
+      // }
+    } catch (error) {
+      toast.error(error);
+    }
+  };
   return (
-    <div className=" w-full px-[50px] py-[32px]">
+    <div className="w-full px-[50px] py-[32px]">
       <h1 className="text-[21px] leading-[24px] font-[700] text-[#404040]">
         My Activities
       </h1>
+
+      {actionDelete && (
+        <YesAndNo
+          heading={" Delete this task?"}
+          para={
+            " Deleting this project will Delete it and all its related data & reports on TechTracker for all users working on the project.You cannot restore it"
+          }
+          yes={handleDeleteProject}
+          no={() => setActionDelete(false)}
+          action={"delete"}
+        />
+      )}
+      {actionUpdate && (
+        <div className="w-full fixed inset-0 flex items-center justify-center z-50 bg-gray-800 bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-[552px] p-[40px]">
+            <div className="flex justify-between items-center w-full">
+              <h3 className="text-xl font-semibold text-gray-900">
+                Edit Activity
+              </h3>
+              <button
+                onClick={() => {
+                  setActionUpdate(false);
+                }}
+                className="text-[#fff] w-full max-w-[25px] bg-gray-400 rounded-3xl mt-[-40px]"
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSubmit}>
+              {/* Project Name */}
+              <div className="my-4">
+                <label className="block font-semibold">Project</label>
+                <input
+                  type="text"
+                  value={projectName}
+                  onChange={(e) => setProjectName(e.target.value)}
+                  className="w-full px-4 py-2 border rounded-md"
+                />
+              </div>
+
+              {/* Activity Description */}
+              <div className="my-4">
+                <label className="block font-semibold">
+                  Activity Description (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={activityDescription}
+                  onChange={(e) => setActivityDescription(e.target.value)}
+                  className="w-full px-4 py-2 border rounded-md"
+                />
+              </div>
+
+              {/* Date Picker and Duration */}
+              <div className="inline-block text-left my-4">
+                <button
+                  type="button"
+                  onClick={() => setDropDownUpdate(!dropDownUpdate)}
+                  className="inline-flex justify-between items-center gap-[5px] w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
+                >
+                  <svg
+                    className="max-w-[20px] w-full"
+                    fill="#000000"
+                    viewBox="0 0 512 512"
+                  >
+                    {/* Calendar Icon */}
+                  </svg>
+                  {`${format(parsedDate, "d MMMM")} `}
+                  <svg
+                    className="-mr-1 ml-2 h-5 w-5"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 011.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.23 8.27a.75.75 0 01.02-1.06z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+
+                {dropDownUpdate && (
+                  <div className="absolute mt-2 max-w-[377px] w-full rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
+                    <div className="py-1 flex w-full">
+                      <div className="max-w-[130px] w-full">
+                        <button
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => handleCustomRange("currentWeek")}
+                        >
+                          Current week
+                        </button>
+                        <button
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => handleCustomRange("last7Days")}
+                        >
+                          Last 7 days
+                        </button>
+                        <button
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => handleCustomRange("currentMonth")}
+                        >
+                          Current month
+                        </button>
+                      </div>
+                      <DatePicker
+                        selectsStart
+                        selected={isSingleDate ? singleDate : startDate}
+                        onChange={(date) => handleDatechange(date)}
+                        startDate={startDate}
+                        endDate={endDate}
+                        maxDate={today}
+                        inline
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Duration */}
+              <div className="my-4">
+                <label className="block font-semibold">Duration</label>
+                <input
+                  type="text"
+                  value={duration}
+                  onChange={(e) => setDuration(e.target.value)}
+                  className="w-full px-4 py-2 border rounded-md"
+                />
+              </div>
+
+              {/* Worked From and To */}
+              <div className="my-4">
+                <label className="block font-semibold">Worked From</label>
+                <input
+                  type="text"
+                  value={workedFrom}
+                  onChange={(e) => setWorkedFrom(e.target.value)}
+                  className="w-full px-4 py-2 border rounded-md"
+                />
+                <label className="block font-semibold mt-4">Worked To</label>
+                <input
+                  type="text"
+                  value={workedTo}
+                  onChange={(e) => setWorkedTo(e.target.value)}
+                  className="w-full px-4 py-2 border rounded-md"
+                />
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                className="w-full py-2 px-4 bg-[#35bf8a] text-white font-semibold rounded-md"
+              >
+                Update Activity
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div className="w-full flex justify-between mt-[40px] items-center">
         <button
           onClick={() => handleActions()}
@@ -405,6 +671,32 @@ function Page() {
             </g>
           </svg>
         </button>
+        {activeAction && (
+          <div
+            className="absolute  mt-[180px] max-w-[240px] w-full p-[8px] bg-white rounded-md shadow-lg z-20"
+            ref={actionRef}
+          >
+            <button
+              className={`w-full text-left px-4 py-2  text-gray-700 hover:bg-gray-100 text-[14px] font-[600]`}
+              onClick={() => handleDeselectSelect()}
+            >
+              {selectedProjects.length === projects.length
+                ? "Deselect All Projects"
+                : "Select All Projects"}
+            </button>
+            {projects.map((project) => (
+              <div key={project._id} className="flex items-center px-4 py-2">
+                <input
+                  type="checkbox"
+                  checked={selectedProjects.includes(project._id)}
+                  onChange={() => toggleProjectSelection(project._id)}
+                  className="mr-2"
+                />
+                <label className="text-sm text-gray-700">{project.name}</label>
+              </div>
+            ))}
+          </div>
+        )}
         {activeAction && (
           <div
             className="absolute  mt-[180px] max-w-[240px] w-full p-[8px] bg-white rounded-md shadow-lg z-20"
@@ -616,7 +908,7 @@ function Page() {
                                           <ul className="py-1">
                                             <button
                                               onClick={() =>
-                                                handleArchive(entry._id)
+                                                handleUpdate(entry._id)
                                               }
                                               className=" w-full text-gray-700  px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer items-start flex"
                                             >
