@@ -8,8 +8,11 @@ import "react-toastify/dist/ReactToastify.css";
 
 function LandingPage() {
   const router = useRouter();
+  const today = Date.now();
 
   const path = usePathname();
+  const storedStartQuery = localStorage.getItem("startQuery");
+  const storedEndQuery = localStorage.getItem("endQuery");
 
   const token = Cookies.get("accessToken");
 
@@ -97,7 +100,9 @@ function LandingPage() {
     {
       id: 2,
       title: "My Activites",
-      link: "/my-activites?start=2024-09-02&end=2024-09-05&projects=all",
+      link: `/my-activites?start=${
+        storedStartQuery ? storedEndQuery : today
+      }&end=${storedEndQuery ? storedEndQuery : today}&projects=all`,
       svg: (
         <svg
           width="24"

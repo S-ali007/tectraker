@@ -20,6 +20,7 @@ import {
   startOfMonth,
   endOfMonth,
 } from "date-fns";
+import { format } from "date-fns";
 
 function Page() {
   const searchParams = useSearchParams();
@@ -27,7 +28,7 @@ function Page() {
 
   const sortBy = searchParams.get("sort-by") || "name";
   const sortOrder = searchParams.get("sort-order") || "asc";
-  const projectIdsFromParams = searchParams.get("projects")?.split(",") || [];
+  const projectIdsFromParams = searchParams.get("projects")?.split("-") || [];
 
   const [activeAction, setActiveAction] = useState(false);
   const [startDate, setStartDate] = useState(new Date());
@@ -43,8 +44,18 @@ function Page() {
   );
   const actionRef = useRef(null);
   const today = Date.now();
-  const startQuery = startDate ? startDate.toLocaleDateString("en-GB") : "";
-  const endQuery = endDate ? endDate.toLocaleDateString("en-GB") : "";
+  const startQuery = startDate.toLocaleDateString("en-GB");
+  const endQuery = endDate.toLocaleDateString("en-GB");
+  const storedDate = localStorage.getItem("startQuery");
+
+  if (!storedDate) {
+    return localStorage.setItem("startQuery", startQuery);
+  }
+  const [day, month, year] = storedDate.split("/").map(Number);
+  const parsedDate = new Date(year, month - 1, day);
+  const formatDateRoute = (dateString) => {
+    return dateString.toLocaleDateString("en-GB");
+  };
   const formatDate = (dateString) => {
     const options = { month: "long", day: "numeric" };
     return new Date(dateString).toLocaleDateString("en-GB", options);
@@ -62,12 +73,13 @@ function Page() {
 
     return `${formatTime(start)} — ${formatTime(end)}`;
   };
+  const updatedQueryParams = new URLSearchParams(searchParams);
+  const allProjects = updatedQueryParams.get("projects");
 
   useEffect(() => {
     const fetchProjects = async () => {
       const token = Cookies.get("accessToken");
       if (!token) return router.push("/login");
-
       try {
         const response = await api.get(
           `/api/v1/project/projects?sort-by=${sortBy}&sort-order=${sortOrder}`,
@@ -78,15 +90,9 @@ function Page() {
             },
           }
         );
+
         if (response) {
           dispatch(setAllProjects(response.data));
-
-          const selectedProjectsFromParams = response.data.filter((project) =>
-            projectIdsFromParams.includes(project._id)
-          );
-          dispatch(
-            setSelectedProjects(selectedProjectsFromParams.map((p) => p._id))
-          );
         }
       } catch (error) {
         toast.error(error?.response?.data?.errors || "An error occurred");
@@ -95,6 +101,64 @@ function Page() {
 
     fetchProjects();
   }, [sortBy, sortOrder, dispatch, router]);
+
+  useEffect(() => {
+    const fetchProjectsWithUrlParams = async () => {
+      const token = Cookies.get("accessToken");
+      const storedStartQuery = localStorage.getItem("startQuery");
+
+      if (allProjects === "all") {
+        const allProjectIds = projects.map((project) => project._id);
+        dispatch(setSelectedProjects(allProjectIds));
+        router.push(
+          `/my-activites?start=${storedStartQuery}&end=${endQuery}&projects=${projects
+            .map((project) => project._id)
+            .join("-")}`
+        );
+        const res = await api.get(
+          `/api/v1/project/user/my-activites?start=${storedStartQuery}&end=${endQuery}&projects=${projects
+            .map((project) => project._id)
+            .join("-")}`,
+          {
+            headers: {
+              Authorization: token,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        const filtered = res.data.data.filterProjects;
+        setFilteredProject(filtered);
+      } else if (projects) {
+        try {
+          const res = await api.get(
+            `/api/v1/project/user/my-activites?start=${storedStartQuery}&end=${endQuery}&projects=${projects
+              .map((project) => project._id)
+              .join("-")}`,
+            {
+              headers: {
+                Authorization: token,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          const filtered = res.data.data.filterProjects;
+          setFilteredProject(filtered);
+          const allProjectIds = projects.map((project) => project._id);
+          const dataProject = allProjects.split("-");
+          if (dataProject != "none") {
+            dispatch(setSelectedProjects(allProjects.split("-")));
+          }
+        } catch (error) {
+          toast.error("Failed to fetch time entries.");
+          console.error(error);
+        }
+      }
+    };
+
+    if (projects.length > 0 && projects) {
+      fetchProjectsWithUrlParams();
+    }
+  }, [projects, dispatch]);
 
   const handleDeselectSelect = async () => {
     dispatch(
@@ -126,15 +190,8 @@ function Page() {
             },
           }
         );
-        const filtered = res.data.filteredProjects;
+        const filtered = res.data.data.filterProjects;
         setFilteredProject(filtered);
-        console.log(filteredProject, "dddddddddd");
-        // dispatch(
-        //   setTimeEntriesForProject([
-        //     ...timeEntriesForProjects,
-        //     { projectId, timeEntries: res.data.timeEntries },
-        //   ])
-        // );
       } catch (error) {
         toast.error("Failed to fetch time entries.");
         console.error(error);
@@ -155,7 +212,6 @@ function Page() {
 
     dispatch(setSelectedProjects(updatedSelectedProjects));
 
-    const updatedQueryParams = new URLSearchParams(searchParams);
     updatedQueryParams.set("projects", updatedSelectedProjects.join("-"));
 
     if (!updatedSelectedProjects.length) {
@@ -189,13 +245,6 @@ function Page() {
         const filtered = res.data.data.filterProjects;
         setFilteredProject(filtered);
         console.log(filtered, "dddddddddd");
-
-        // dispatch(
-        //   setTimeEntriesForProject([
-        //     ...timeEntriesForProjects,
-        //     { projectId, timeEntries: res.data.timeEntries },
-        //   ])
-        // );
       } catch (error) {
         toast.error("Failed to fetch time entries.");
         console.error(error);
@@ -250,17 +299,19 @@ function Page() {
 
   const handleDatechange = async (date) => {
     setStartDate(date);
+    const newStartDate = await formatDateRoute(date);
+    localStorage.setItem("startQuery", newStartDate);
     router.push(
-      `/my-activites?start=${startQuery}&end=${endQuery}&projects=${
-        selectedProjects.length > 0 ? projectIdsFromParams : "none"
+      `/my-activites?start=${newStartDate}&end=${endQuery}&projects=${
+        selectedProjects.length > 0 ? selectedProjects.join("-") : "none"
       }`
     );
 
     try {
       const token = Cookies.get("accessToken");
       const res = await api.get(
-        `/api/v1/project/user/my-activites?start=${startQuery}&end=${endQuery}&projects=${
-          selectedProjects.length > 0 ? projectIdsFromParams : "none"
+        `/api/v1/project/user/my-activites?start=${newStartDate}&end=${endQuery}&projects=${
+          selectedProjects.length > 0 ? selectedProjects.join("-") : "none"
         }`,
         {
           headers: {
@@ -417,7 +468,7 @@ function Page() {
                 </g>{" "}
               </g>
             </svg>
-            {`${formatDate(startDate)} — ${formatDate(endDate)}`}
+            {`${format(parsedDate, "d MMMM")} — ${formatDate(endDate)}`}
             <svg
               className="-mr-1 ml-2 h-5 w-5"
               xmlns="http://www.w3.org/2000/svg"
@@ -459,28 +510,12 @@ function Page() {
                 <DatePicker
                   selectsStart
                   selected={isSingleDate ? singleDate : startDate}
-                  // onChange={
-                  //   isSingleDate
-                  //     ? setSingleDate
-                  //     : (dates) => handleDateChange(dates)
-                  // }
-                  // onChange={(date) => setStartDate(date)}
                   onChange={(date) => handleDatechange(date)}
                   startDate={startDate}
                   endDate={endDate}
-                  // selectsRange={!isSingleDate}
                   maxDate={today}
                   inline
                 />
-                {/* <DatePicker
-                  selected={startDate}
-                  onChange={(date) => setStartDate(date)}
-                  selectsStart
-                  startDate={startDate}
-                  endDate={endDate}
-                  maxDate={today}
-                  inline
-                /> */}
               </div>
             </div>
           )}
@@ -555,7 +590,7 @@ function Page() {
                                     </div>
                                     {/* Web Tracker Activity */}
                                     <div className="max-w-[15 2px] w-full flex">
-                                    <div className="max-w-[42px] w-full">
+                                      <div className="max-w-[42px] w-full">
                                         <svg
                                           viewBox="0 0 50 50"
                                           id="Message_And_Communication_Icons"
@@ -679,7 +714,6 @@ function Page() {
                                       <div className="text-[11px] text-[#acb3bb] w-full flex items-center">
                                         Web Tracker Activity
                                       </div>
-                                      
                                     </div>
                                   </div>
                                 </li>
