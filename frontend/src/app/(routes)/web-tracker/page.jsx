@@ -209,9 +209,15 @@ function Page() {
             </ul>
             {projects.map((item) => {
               console.log(item);
-              const latestTimeEntry = item.dates?.[0]?.activities?.[item.dates[0].activities.length - 1] || null;
+
+              const todayDate = new Date().toISOString().split('T')[0];
               
-              console.log(latestTimeEntry);
+              const todayDateEntry = item.dates?.find(dateItem => dateItem.date === todayDate);
+              
+              const relevantDate = todayDateEntry || item.dates?.[item.dates.length - 1] || null;
+            
+              const latestTimeEntry = relevantDate?.activities?.[relevantDate.activities.length - 1] || null;
+            
               return (
                 <div
                   key={item._id}
