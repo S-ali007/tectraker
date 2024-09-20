@@ -2,19 +2,26 @@
 import Cookies from "js-cookie";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 function LandingPage() {
-  const router = useRouter();
-  const today = Date.now();
-
-  const path = usePathname();
-  const storedStartQuery = localStorage?.getItem("startQuery");
-  const storedEndQuery = localStorage?.getItem("endQuery");
+  const [storedStartQuery, setStoredStartQuery] = useState(null);
+  const [storedEndQuery, setStoredEndQuery] = useState(null);
 
   const token = Cookies.get("accessToken");
+  const path = usePathname();
+  const today = Date.now();
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const startQuery = localStorage.getItem("startQuery");
+      const endQuery = localStorage.getItem("endQuery");
+      setStoredStartQuery(startQuery);
+      setStoredEndQuery(endQuery);
+    }
+  }, []);
 
   if (!token) {
     return null;
@@ -23,7 +30,6 @@ function LandingPage() {
   if (["/login", "/signup", "/verifyemail"].includes(path)) {
     return null;
   }
-
   const maindata = [
     {
       id: 0,
