@@ -57,10 +57,10 @@ function Page() {
   const today = Date.now();
   const startQuery = startDate.toLocaleDateString("en-GB");
   const endQuery = endDate.toLocaleDateString("en-GB");
-  const storedDate = localStorage.getItem("startQuery");
+  const storedDate = localStorage?.getItem("startQuery");
 
   if (!storedDate) {
-    return localStorage.setItem("startQuery", startQuery);
+    return localStorage?.setItem("startQuery", startQuery);
   }
   const [day, month, year] = storedDate.split("/").map(Number);
   const parsedDate = new Date(year, month - 1, day);
@@ -116,7 +116,7 @@ function Page() {
   useEffect(() => {
     const fetchProjectsWithUrlParams = async () => {
       const token = Cookies.get("accessToken");
-      const storedStartQuery = localStorage.getItem("startQuery");
+      const storedStartQuery = localStorage?.getItem("startQuery");
 
       if (allProjects === "all") {
         const allProjectIds = projects.map((project) => project._id);
@@ -313,7 +313,7 @@ function Page() {
   const handleDatechange = async (date) => {
     setStartDate(date);
     const newStartDate = await formatDateRoute(date);
-    localStorage.setItem("startQuery", newStartDate);
+    localStorage?.setItem("startQuery", newStartDate);
     router.push(
       `/my-activites?start=${newStartDate}&end=${endQuery}&projects=${
         selectedProjects.length > 0 ? selectedProjects.join("-") : "none"

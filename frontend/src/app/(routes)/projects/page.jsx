@@ -120,6 +120,7 @@ function ProjectListPage() {
   };
 
   const handleDeleteProject = async () => {
+    
     const token = Cookies.get("accessToken");
 
     try {

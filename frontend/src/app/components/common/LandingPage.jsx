@@ -11,8 +11,8 @@ function LandingPage() {
   const today = Date.now();
 
   const path = usePathname();
-  const storedStartQuery = localStorage.getItem("startQuery");
-  const storedEndQuery = localStorage.getItem("endQuery");
+  const storedStartQuery = localStorage?.getItem("startQuery");
+  const storedEndQuery = localStorage?.getItem("endQuery");
 
   const token = Cookies.get("accessToken");
 
@@ -219,7 +219,7 @@ function LandingPage() {
   ];
 
   const handleLogout = () => {
-    localStorage.removeItem("userData");
+    localStorage?.removeItem("userData");
     document.cookie = "accessToken=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
 
     router.push("/login");
