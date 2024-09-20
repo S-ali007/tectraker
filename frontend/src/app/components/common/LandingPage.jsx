@@ -13,6 +13,7 @@ function LandingPage() {
   const token = Cookies.get("accessToken");
   const path = usePathname();
   const today = Date.now();
+  const router = useRouter();
 
   useEffect(() => {
     if (typeof window !== "undefined") {

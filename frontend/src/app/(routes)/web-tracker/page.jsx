@@ -208,8 +208,10 @@ function Page() {
               </div>
             </ul>
             {projects.map((item) => {
-              const latestTimeEntry =
-                item.timeEntries?.[item.timeEntries.length - 1] || null;
+              console.log(item);
+              const latestTimeEntry = item.dates?.[0]?.activities?.[item.dates[0].activities.length - 1] || null;
+              
+              console.log(latestTimeEntry);
               return (
                 <div
                   key={item._id}
@@ -243,7 +245,7 @@ function Page() {
                         </defs>
                       </svg>
                     </div>
-                    <div>
+                    <div className="">
                       <h1 className="text-[17px] text-[#404040] ">
                         {item.name}
                       </h1>
