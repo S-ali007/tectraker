@@ -244,7 +244,7 @@ function Page() {
                       </svg>
                     </div>
                     <div>
-                      <h1 className="text-[17px] text-[#404040] w-[58px]">
+                      <h1 className="text-[17px] text-[#404040] ">
                         {item.name}
                       </h1>
                       <p className="text-[11px] text-[#acb3bb] w-full ">
