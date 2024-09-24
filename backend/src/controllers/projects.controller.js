@@ -375,6 +375,7 @@ const updateTask = asyncHandler(async (req, res) => {
           "dates.$[].activities.$[activity].worked_to": worked_to,
         },
       },
+
       {
         arrayFilters: [{ "activity._id": id }],
         new: true,

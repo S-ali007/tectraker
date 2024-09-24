@@ -12,17 +12,10 @@ import toast, { Toaster } from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import "react-datepicker/dist/react-datepicker.css";
 import MyActivites from "@/assets/icons/MyActivites";
-import DatePicker from "react-datepicker";
-import {
-  addDays,
-  startOfWeek,
-  endOfWeek,
-  startOfMonth,
-  endOfMonth,
-} from "date-fns";
-import { format } from "date-fns";
+
 import ActivityMsg from "@/assets/icons/ActivityMsg";
 import YesAndNo from "@/app/components/common/YesAndNo";
+import DropdownDatePicker from "@/app/components/common/DateCalender";
 
 function Page() {
   const searchParams = useSearchParams();
@@ -111,7 +104,7 @@ function Page() {
     };
 
     fetchProjects();
-  }, [sortBy, sortOrder, dispatch, router]);
+  }, [sortBy, sortOrder, dispatch, router, actionDelete, selectedProjectId]);
 
   useEffect(() => {
     const fetchProjectsWithUrlParams = async () => {
@@ -169,7 +162,7 @@ function Page() {
     if (projects.length > 0 && projects) {
       fetchProjectsWithUrlParams();
     }
-  }, [projects, dispatch]);
+  }, [projects, dispatch, actionDelete]);
 
   const handleDeselectSelect = async () => {
     dispatch(
@@ -290,28 +283,7 @@ function Page() {
     };
   }, []);
 
-  const handleCustomRange = (rangeType) => {
-    switch (rangeType) {
-      case "currentWeek":
-        setStartDate(startOfWeek(new Date()));
-        setEndDate(new Date());
-        break;
-      case "last7Days":
-        setStartDate(addDays(new Date(), -7));
-        setEndDate(new Date());
-        break;
-      case "currentMonth":
-        setStartDate(startOfMonth(new Date()));
-        setEndDate(new Date());
-        break;
-      default:
-        break;
-    }
-    setIsDateDropdownOpen(false);
-  };
-
   const handleDatechange = async (date) => {
-    setStartDate(date);
     const newStartDate = await formatDateRoute(date);
     localStorage?.setItem("startQuery", newStartDate);
     router.push(
@@ -339,6 +311,7 @@ function Page() {
       toast.error("Please select project.");
     }
   };
+
   const handleDeleteProject = async () => {
     const token = Cookies.get("accessToken");
 
@@ -368,29 +341,6 @@ function Page() {
     setActionDelete(true);
   };
 
-  const handleUpdateProject = async () => {
-    const token = Cookies.get("accessToken");
-    try {
-      const response = await api.put(
-        `/api/v1/project/user/${selectedProjectId}/my-activites`,
-        { task_name: selectedProjectId },
-        {
-          headers: {
-            Authorization: token,
-          },
-        }
-      );
-      setActionUpdate(false);
-
-      // if (response.status === 200) {
-      //   setActionDelete(false);
-      //   toast.success("Project Deleted successfully");
-      //   fetchProjects();
-      // }
-    } catch (error) {
-      toast.error(error);
-    }
-  };
   const handleUpdate = (projectId) => {
     setSelectedProjectId(projectId);
 
@@ -496,71 +446,8 @@ function Page() {
               </div>
 
               {/* Date Picker and Duration */}
-              <div className="inline-block text-left my-4">
-                <button
-                  type="button"
-                  onClick={() => setDropDownUpdate(!dropDownUpdate)}
-                  className="inline-flex justify-between items-center gap-[5px] w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
-                >
-                  <svg
-                    className="max-w-[20px] w-full"
-                    fill="#000000"
-                    viewBox="0 0 512 512"
-                  >
-                    {/* Calendar Icon */}
-                  </svg>
-                  {`${format(parsedDate, "d MMMM")} `}
-                  <svg
-                    className="-mr-1 ml-2 h-5 w-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 011.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.23 8.27a.75.75 0 01.02-1.06z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </button>
 
-                {dropDownUpdate && (
-                  <div className="absolute mt-2 max-w-[377px] w-full rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
-                    <div className="py-1 flex w-full">
-                      <div className="max-w-[130px] w-full">
-                        <button
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          onClick={() => handleCustomRange("currentWeek")}
-                        >
-                          Current week
-                        </button>
-                        <button
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          onClick={() => handleCustomRange("last7Days")}
-                        >
-                          Last 7 days
-                        </button>
-                        <button
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          onClick={() => handleCustomRange("currentMonth")}
-                        >
-                          Current month
-                        </button>
-                      </div>
-                      <DatePicker
-                        selectsStart
-                        selected={isSingleDate ? singleDate : startDate}
-                        onChange={(date) => handleDatechange(date)}
-                        startDate={startDate}
-                        endDate={endDate}
-                        maxDate={today}
-                        inline
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
+              <DropdownDatePicker onDateChange={handleDatechange} />
 
               {/* Duration */}
               <div className="my-4">
@@ -725,98 +612,11 @@ function Page() {
         )}
 
         {/* date btn */}
-        <div className=" inline-block text-left">
-          <button
-            type="button"
-            onClick={() => setIsDateDropdownOpen(!isDateDropdownOpen)}
-            className="inline-flex justify-between items-center gap-[5px] w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
-          >
-            <svg
-              className="max-w-[20px] w-full"
-              fill="#000000"
-              viewBox="0 0 512 512"
-            >
-              <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-              <g
-                id="SVGRepo_tracerCarrier"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              ></g>
-              <g id="SVGRepo_iconCarrier">
-                {" "}
-                <g>
-                  {" "}
-                  <g>
-                    {" "}
-                    <path d="M490.6,43H381.1V11h-20.9v32H151.7V11h-20.9v32H21.4C15.2,43,11,47.2,11,53.6v436.7c0,6.4,4.2,10.7,10.4,10.7h469.1 c6.3,0,10.4-4.3,10.4-10.7V53.6C501,47.2,496.8,43,490.6,43z M480.1,479.7H31.9V64.3h99v32h20.9v-32h208.5v32h20.9v-32h99V479.7z"></path>{" "}
-                    <path d="m84,170.8c-6.3,0-10.4,4.3-10.4,10.7v245c0,6.4 4.2,10.7 10.4,10.7h344c6.3,0 10.4-4.3 10.4-10.7v-245c0-6.4-4.2-10.7-10.4-10.7h-344zm333.6,245h-323.2v-223.7h323.2v223.7z"></path>{" "}
-                    <rect width="20.9" x="214.3" y="232.6" height="21.3"></rect>{" "}
-                    <rect width="20.9" x="276.9" y="232.6" height="21.3"></rect>{" "}
-                    <rect width="20.9" x="339.4" y="232.6" height="21.3"></rect>{" "}
-                    <rect width="20.9" x="151.7" y="293.3" height="21.3"></rect>{" "}
-                    <rect width="20.9" x="214.3" y="293.3" height="21.3"></rect>{" "}
-                    <rect width="20.9" x="276.9" y="293.3" height="21.3"></rect>{" "}
-                    <rect width="20.9" x="339.4" y="293.3" height="21.3"></rect>{" "}
-                    <rect width="20.9" x="151.7" y="355.1" height="21.3"></rect>{" "}
-                    <rect width="20.9" x="214.3" y="355.1" height="21.3"></rect>{" "}
-                    <rect width="20.9" x="276.9" y="355.1" height="21.3"></rect>{" "}
-                    <rect width="20.9" x="339.4" y="355.1" height="21.3"></rect>{" "}
-                  </g>{" "}
-                </g>{" "}
-              </g>
-            </svg>
-            {`${format(parsedDate, "d MMMM")} — ${formatDate(endDate)}`}
-            <svg
-              className="-mr-1 ml-2 h-5 w-5"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                fillRule="evenodd"
-                d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 011.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.23 8.27a.75.75 0 01.02-1.06z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </button>
 
-          {isDateDropdownOpen && (
-            <div className="  absolute right-[50px] mt-2 max-w-[377px] w-full rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
-              <div className="py-1 flex w-full ">
-                <div className="max-w-[130px] w-full">
-                  <button
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    onClick={() => handleCustomRange("currentWeek")}
-                  >
-                    Current week
-                  </button>
-                  <button
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    onClick={() => handleCustomRange("last7Days")}
-                  >
-                    Last 7 days
-                  </button>
-                  <button
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    onClick={() => handleCustomRange("currentMonth")}
-                  >
-                    Current month
-                  </button>
-                </div>
-                <DatePicker
-                  selectsStart
-                  selected={isSingleDate ? singleDate : startDate}
-                  onChange={(date) => handleDatechange(date)}
-                  startDate={startDate}
-                  endDate={endDate}
-                  maxDate={today}
-                  inline
-                />
-              </div>
-            </div>
-          )}
-        </div>
+        <DropdownDatePicker
+          onDateChange={handleDatechange}
+          extraClasses={"right-12"}
+        />
       </div>
       {projects.length === 0 ? (
         <div className="w-full flex flex-col items-center justify-center h-[75vh]">
