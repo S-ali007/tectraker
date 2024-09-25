@@ -5,16 +5,23 @@ import { useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
-import { setAllProjects } from "@/app/features/projectSlice";
+import {
+  setAllProjects,
+  setSelectedProjects,
+  setTimeEntriesForProject,
+} from "@/app/features/projectSlice";
 import api from "@/api";
 import BarChart from "@/app/components/BarChart";
 import DropdownDatePicker from "@/app/components/common/DateCalender";
 import SelectButton from "@/app/components/common/SelectProjectsBtn";
+import SelectProjectsBtn from "@/app/components/common/SelectProjectsBtn";
+import Link from "next/link";
 
 function Page() {
   const searchParams = useSearchParams();
   const dispatch = useDispatch();
   const router = useRouter();
+  const [filteredProject, setFilteredProject] = useState(null);
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
   const [loading, setLoading] = useState(true);
@@ -22,19 +29,122 @@ function Page() {
   const sortOrder = searchParams.get("sort-order") || "asc";
   const startQuery = startDate.toLocaleDateString("en-GB");
   const endQuery = endDate.toLocaleDateString("en-GB");
-  const { projects, selectedProjects } = useSelector((state) => state.project);
+
+  const { projects, selectedProjects, timeEntriesForProjects } = useSelector(
+    (state) => state.project
+  );
+  const tab = searchParams.get("chart");
+
+  const updatedQueryParams = new URLSearchParams(searchParams);
+  const allProjects = updatedQueryParams.get("projects");
 
   const formatDateRoute = (dateString) => {
     return dateString.toLocaleDateString("en-GB");
   };
+  const toggleProjectSelection = async (projectId) => {
+    let updatedSelectedProjects;
 
+    if (selectedProjects.includes(projectId)) {
+      updatedSelectedProjects = selectedProjects.filter(
+        (id) => id !== projectId
+      );
+    } else {
+      updatedSelectedProjects = [...selectedProjects, projectId];
+    }
+
+    dispatch(setSelectedProjects(updatedSelectedProjects));
+
+    updatedQueryParams.set("projects", updatedSelectedProjects.join("-"));
+
+    if (!updatedSelectedProjects.length) {
+      updatedQueryParams.delete("projects");
+    }
+
+    router.push(
+      `/reports?start=${startQuery}&end=${endQuery}&projects=${
+        updatedSelectedProjects.length > 0
+          ? updatedSelectedProjects.join("-")
+          : "none"
+      }`
+    );
+
+    if (!selectedProjects.includes(projectId)) {
+      try {
+        const token = Cookies.get("accessToken");
+        const res = await api.get(
+          `/api/v1/project/user/my-activites?start=${startQuery}&end=${endQuery}&projects=${
+            updatedSelectedProjects.length > 0
+              ? updatedSelectedProjects.join("-")
+              : "none"
+          }`,
+          {
+            headers: {
+              Authorization: token,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        const filtered = res.data.data.filterProjects;
+        setFilteredProject(filtered);
+      } catch (error) {
+        toast.error("Failed to fetch time entries.");
+        console.error(error);
+      }
+    } else {
+      dispatch(
+        setTimeEntriesForProject(
+          timeEntriesForProjects.filter(
+            (entry) => entry.projectId !== projectId
+          )
+        )
+      );
+    }
+  };
+  const handleDeselectSelect = async () => {
+    dispatch(
+      setSelectedProjects(
+        selectedProjects.length === projects.length
+          ? []
+          : projects.map((project) => project._id)
+      )
+    );
+
+    router.push(
+      `/reports?start=${startQuery}&end=${endQuery}&workers=391694&projects=${
+        selectedProjects.length > 0
+          ? "none"
+          : projects.map((project) => project._id).join("-")
+      }&chart=projects&table=work-summary&grouping=workers`
+    );
+    if (selectedProjects.length <= 0) {
+      try {
+        const token = Cookies.get("accessToken");
+        const res = await api.get(
+          `/api/v1/project/user/my-activites?start=${startQuery}&end=${endQuery}&projects=${projects
+            .map((project) => project._id)
+            .join("-")}`,
+          {
+            headers: {
+              Authorization: token,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        const filtered = res.data.data.filterProjects;
+        setFilteredProject(filtered);
+      } catch (error) {
+        toast.error("Failed to fetch time entries.");
+        console.error(error);
+      }
+    }
+  };
   const handleDatechange = async (date) => {
     const newStartDate = await formatDateRoute(date);
     localStorage?.setItem("startQuery", newStartDate);
     router.push(
-      `/reports?start=${newStartDate}&end=${endQuery}&projects=${
+      `/reports?start=${newStartDate}&end=${endQuery}&workers=391694&projects=${
         selectedProjects.length > 0 ? selectedProjects.join("-") : "none"
-      }`
+      }&chart=workers&table=work-summary&grouping=projects`
     );
 
     try {
@@ -89,10 +199,6 @@ function Page() {
     return <div className="text-center">Loading...</div>;
   }
 
-  const handleSelectProjects = () => {
-    console.log("Button Clicked!");
-  };
-
   return (
     <div className="w-full px-[50px] py-[32px]">
       <h1 className="text-[21px] leading-[24px] font-[700] text-[#404040]">
@@ -112,44 +218,51 @@ function Page() {
           <div className="w-full flex justify-between">
             {/* date btn */}
 
-            <SelectButton
-              onButtonClick={handleSelectProjects}
-              buttonText="Select a Project"
-              selectedCount={selectedProjects.length}
-              icon={
-                <svg
-                  fill="#000000"
-                  height="15px"
-                  width="15px"
-                  version="1.1"
-                  viewBox="0 0 512 512"
-                  enable-background="new 0 0 512 512"
-                >
-                  <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                  <g
-                    id="SVGRepo_tracerCarrier"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  ></g>
-                  <g id="SVGRepo_iconCarrier">
-                    {" "}
-                    <g>
-                      {" "}
-                      <g>
-                        {" "}
-                        <g>
-                          {" "}
-                          <path d="m460.2,272.6h-52.3v-15.7c0-11.3-9.1-20.4-20.4-20.4-11.3,0-20.4,9.1-20.4,20.4v15.7h-222.1v-15.7c0-11.3-9.1-20.4-20.4-20.4-11.3,0-20.4,9.1-20.4,20.4v15.7h-52.4v-136.3h408.3v136.3h0.1zm-408.4,187.6v-146.7h52.3v15.7c0,11.3 9.1,20.4 20.4,20.4 11.3,0 20.4-9.1 20.4-20.4v-15.7h222v15.7c0,11.3 9.1,20.4 20.4,20.4 11.3,0 20.4-9.1 20.4-20.4v-15.7h52.3v146.7h-408.2-1.42109e-14zm130.8-408.4h131.8v41.8h-131.8v-41.8zm298,43.6h-125.4v-52.1c0-17.8-14.5-32.3-32.3-32.3h-148.8c-17.8,0-32.3,14.5-32.3,32.3v52.1h-110.4c-11.3,0-20.4,9.1-20.4,20.4v364.7c0,11.3 9.1,20.4 20.4,20.4h449.2c11.3,0 20.4-9.1 20.4-20.4v-364.7c5.68434e-14-11.2-9.1-20.4-20.4-20.4z"></path>{" "}
-                        </g>{" "}
-                      </g>{" "}
-                    </g>{" "}
-                  </g>
-                </svg>
-              }
+            <SelectProjectsBtn
+              projects={projects}
+              selectedProjects={selectedProjects}
+              toggleProjectSelection={toggleProjectSelection}
+              handleDeselectSelect={handleDeselectSelect}
             />
             <DropdownDatePicker onDateChange={handleDatechange} />
           </div>
-          <BarChart />
+
+          <div className="max-w-[694px] w-full   flex gap-[30px] text-[#404040] text-[15px] leading-[15px] font-[600] mt-[30px]">
+            <Link
+              href={`/reports?start=${startQuery}&end=${endQuery}&workers=391694&projects=none&chart=projects&table=work-summary&grouping=projects`}
+              className={`pb-[5px] ${
+                tab === "projects" && "border-b-[#004F98] border-b-[2px]"
+              }`}
+            >
+              Projects
+            </Link>
+            <Link
+              href={`/reports?start=${startQuery}&end=${endQuery}&workers=391694&projects=none&chart=workers&table=work-summary&grouping=projects`}
+              className={`pb-[5px] ${
+                tab === "workers" && "border-b-[#004F98] border-b-[2px]"
+              }`}
+            >
+              Members{" "}
+              {/* {archiveProjects.length > 0 ? `(${archiveProjects.length})` : ""} */}
+            </Link>
+          </div>
+          {selectedProjects.length && tab === "projects" ? (
+            <BarChart />
+          ) : (
+            <>
+              <div className="relative bg-[#f3f8fc] py-12 mt-[1rem]">
+                <div className="mx-auto flex justify-center">
+                  <Reports />
+                </div>
+                <div className="absolute bottom-[22px] w-full text-center text-gray-600">
+                  <p>
+                    You don’t have any reports for the selected criteria. Try
+                    different filters.
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>
