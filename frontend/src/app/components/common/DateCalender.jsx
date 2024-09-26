@@ -13,7 +13,9 @@ const DropdownDatePicker = ({
   const [startDate, setStartDate] = useState(initialStartDate);
   const [endDate, setEndDate] = useState(initialEndDate);
   const today = new Date();
-
+  const storedStartQuery = localStorage?.getItem("startQuery");
+  const [day, month, year] = storedStartQuery.split("/").map(Number);
+  const parsedDate = new Date(year, month - 1, day);
   const handleCustomRange = (rangeType) => {
     switch (rangeType) {
       case "currentWeek":
@@ -47,7 +49,7 @@ const DropdownDatePicker = ({
         onClick={() => setIsDateDropdownOpen(!isDateDropdownOpen)}
         className="inline-flex justify-between items-center gap-[5px] w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
       >
-        <span>{`${format(startDate, "d MMMM")} — ${format(
+        <span>{`${format(parsedDate, "d MMMM")} — ${format(
           endDate,
           "d MMMM"
         )}`}</span>

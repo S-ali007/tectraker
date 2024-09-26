@@ -5,7 +5,6 @@ const StackedBarChart = ({ width = 1330, height = 400 }) => {
   const svgRef = useRef();
   const tooltipRef = useRef();
 
-  // Data with categories representing seconds spent on different dates
   const data = [
     { date: "Sep 16", project1: 10, project2: 30, project3: 20 },
     { date: "Sep 17", project1: 30, project2: 50, project3: 10 },

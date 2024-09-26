@@ -56,8 +56,7 @@ function Page() {
   if (!storedDate) {
     return localStorage?.setItem("startQuery", startQuery);
   }
-  const [day, month, year] = storedDate.split("/").map(Number);
-  const parsedDate = new Date(year, month - 1, day);
+ 
   const formatDateRoute = (dateString) => {
     return dateString.toLocaleDateString("en-GB");
   };

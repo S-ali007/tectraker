@@ -65,7 +65,7 @@ function Page() {
         updatedSelectedProjects.length > 0
           ? updatedSelectedProjects.join("-")
           : "none"
-      }`
+      }&chart=${tab}&table=work-summary&grouping=workers`
     );
 
     if (!selectedProjects.includes(projectId)) {
@@ -114,7 +114,7 @@ function Page() {
         selectedProjects.length > 0
           ? "none"
           : projects.map((project) => project._id).join("-")
-      }&chart=projects&table=work-summary&grouping=workers`
+      }&chart=${tab}&table=work-summary&grouping=workers`
     );
     if (selectedProjects.length <= 0) {
       try {
@@ -172,18 +172,16 @@ function Page() {
       if (!token) return router.push("/login");
 
       try {
-        const response = await api.get(
-          `/api/v1/project/projects?sort-by=${sortBy}&sort-order=${sortOrder}`,
-          {
-            headers: {
-              Authorization: token,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await api.get(`/api/v1/project/projects`, {
+          headers: {
+            Authorization: token,
+            "Content-Type": "application/json",
+          },
+        });
 
         if (response) {
           dispatch(setAllProjects(response.data));
+          console.log(response);
         }
       } catch (error) {
         toast.error(error?.response?.data?.errors || "An error occurred");
@@ -194,6 +192,63 @@ function Page() {
 
     fetchProjects();
   }, [sortBy, sortOrder, dispatch, router]);
+  useEffect(() => {
+    const fetchProjectsWithUrlParams = async () => {
+      const token = Cookies.get("accessToken");
+      const storedStartQuery = localStorage?.getItem("startQuery");
+
+      if (allProjects === "all") {
+        const allProjectIds = projects.map((project) => project._id);
+        dispatch(setSelectedProjects(allProjectIds));
+        router.push(
+          `/reports?start=${storedStartQuery}&end=${endQuery}&projects=${projects
+            .map((project) => project._id)
+            .join("-")}&chart=projects&table=work-summary&grouping=projects`
+        );
+        const res = await api.get(
+          `/api/v1/project/user/my-activites?start=${storedStartQuery}&end=${endQuery}&projects=${projects
+            .map((project) => project._id)
+            .join("-")}`,
+          {
+            headers: {
+              Authorization: token,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        const filtered = res.data.data.filterProjects;
+        setFilteredProject(filtered);
+      } else if (projects) {
+        try {
+          const res = await api.get(
+            `/api/v1/project/user/my-activites?start=${storedStartQuery}&end=${endQuery}&projects=${projects
+              .map((project) => project._id)
+              .join("-")}`,
+            {
+              headers: {
+                Authorization: token,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          const filtered = res.data.data.filterProjects;
+          setFilteredProject(filtered);
+          const allProjectIds = projects.map((project) => project._id);
+          const dataProject = allProjects.split("-");
+          if (dataProject != "none") {
+            dispatch(setSelectedProjects(allProjects.split("-")));
+          }
+        } catch (error) {
+          toast.error("Failed to fetch time entries.");
+          console.error(error);
+        }
+      }
+    };
+
+    if (projects.length > 0 && projects) {
+      fetchProjectsWithUrlParams();
+    }
+  }, [projects, dispatch]);
 
   if (loading) {
     return <div className="text-center">Loading...</div>;
@@ -229,7 +284,11 @@ function Page() {
 
           <div className="max-w-[694px] w-full   flex gap-[30px] text-[#404040] text-[15px] leading-[15px] font-[600] mt-[30px]">
             <Link
-              href={`/reports?start=${startQuery}&end=${endQuery}&workers=391694&projects=none&chart=projects&table=work-summary&grouping=projects`}
+              href={`/reports?start=${startQuery}&end=${endQuery}&workers=391694&projects=${
+                selectedProjects.length > 0
+                  ? selectedProjects.join("-")
+                  : "none"
+              }&chart=projects&table=work-summary&grouping=projects`}
               className={`pb-[5px] ${
                 tab === "projects" && "border-b-[#004F98] border-b-[2px]"
               }`}
@@ -237,7 +296,11 @@ function Page() {
               Projects
             </Link>
             <Link
-              href={`/reports?start=${startQuery}&end=${endQuery}&workers=391694&projects=none&chart=workers&table=work-summary&grouping=projects`}
+              href={`/reports?start=${startQuery}&end=${endQuery}&workers=391694&projects=${
+                selectedProjects.length > 0
+                  ? selectedProjects.join("-")
+                  : "none"
+              }&chart=workers&table=work-summary&grouping=projects`}
               className={`pb-[5px] ${
                 tab === "workers" && "border-b-[#004F98] border-b-[2px]"
               }`}
@@ -247,21 +310,34 @@ function Page() {
             </Link>
           </div>
           {selectedProjects.length && tab === "projects" ? (
-            <BarChart />
+            <BarChart responseData={projects} />
           ) : (
-            <>
-              <div className="relative bg-[#f3f8fc] py-12 mt-[1rem]">
-                <div className="mx-auto flex justify-center">
-                  <Reports />
-                </div>
-                <div className="absolute bottom-[22px] w-full text-center text-gray-600">
-                  <p>
-                    You don’t have any reports for the selected criteria. Try
-                    different filters.
-                  </p>
-                </div>
+            <div className="relative bg-[#f3f8fc] py-12 mt-[1rem]">
+              <div className="mx-auto flex justify-center">
+                <Reports />
               </div>
-            </>
+              <div className="absolute bottom-[22px] w-full text-center text-gray-600">
+                <p>
+                  You don’t have any reports for the selected criteria. Try
+                  different filters.
+                </p>
+              </div>
+            </div>
+          )}
+          {selectedProjects.length && tab === "workers" ? (
+            <BarChart  responseData={projects}/>
+          ) : (
+            <div className="relative bg-[#f3f8fc] py-12 mt-[1rem]">
+              <div className="mx-auto flex justify-center">
+                <Reports />
+              </div>
+              <div className="absolute bottom-[22px] w-full text-center text-gray-600">
+                <p>
+                  You don’t have any reports for the selected criteria. Try
+                  different filters.
+                </p>
+              </div>
+            </div>
           )}
         </div>
       )}

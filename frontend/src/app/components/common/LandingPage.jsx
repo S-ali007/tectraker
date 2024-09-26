@@ -67,7 +67,9 @@ function LandingPage() {
     {
       id: 1,
       title: "Reports",
-      link: `/reports?start=09/09/2024&end=23/09/2024&projects=none&chart=projects&table=work-summary&grouping=projects`,
+      link: `/reports?start=${storedStartQuery ? storedEndQuery : today}&end=${
+        storedEndQuery ? storedEndQuery : today
+      }&projects=all&chart=projects&table=work-summary&grouping=projects`,
       svg: (
         <svg
           width="27"
