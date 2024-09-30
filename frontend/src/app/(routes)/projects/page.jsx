@@ -29,6 +29,7 @@ function ProjectListPage() {
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const { projects, archiveProjects } = useSelector((state) => state.project);
   const actionRef = useRef(null);
+  const [loading, setLoading] = useState(false);
 
   const handleSort = (field) => {
     const newSortOrder =
@@ -116,11 +117,12 @@ function ProjectListPage() {
       }
     } catch (error) {
       dispatch(setAllProjects([]));
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDeleteProject = async () => {
-    
     const token = Cookies.get("accessToken");
 
     try {
@@ -152,6 +154,7 @@ function ProjectListPage() {
     if (!token) {
       return router.push("/login");
     }
+    setLoading(true);
 
     const fetchProjects = async () => {
       try {
@@ -175,6 +178,8 @@ function ProjectListPage() {
         }
       } catch (error) {
         toast.error(error?.response?.data?.errors || "An error occurred");
+      } finally {
+        setLoading(false);
       }
     };
 
