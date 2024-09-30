@@ -325,7 +325,7 @@ function Page() {
             </div>
           )}
           {selectedProjects.length && tab === "workers" ? (
-            <BarChart  responseData={projects}/>
+            <BarChart responseData={projects} />
           ) : (
             <div className="relative bg-[#f3f8fc] py-12 mt-[1rem]">
               <div className="mx-auto flex justify-center">

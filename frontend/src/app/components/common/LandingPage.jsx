@@ -3,12 +3,15 @@ import Cookies from "js-cookie";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 function LandingPage() {
   const [storedStartQuery, setStoredStartQuery] = useState(null);
   const [storedEndQuery, setStoredEndQuery] = useState(null);
+  const [storedrunningProjectId, setRunningProjectId] = useState(null);
+  const { runningProjectId } = useSelector((state) => state.time);
 
   const token = Cookies.get("accessToken");
   const path = usePathname();
@@ -19,10 +22,12 @@ function LandingPage() {
     if (typeof window !== "undefined") {
       const startQuery = localStorage.getItem("startQuery");
       const endQuery = localStorage.getItem("endQuery");
+      const storedProject = localStorage.getItem("runningProjectId");
       setStoredStartQuery(startQuery);
       setStoredEndQuery(endQuery);
+      setRunningProjectId(storedProject);
     }
-  }, []);
+  }, [storedrunningProjectId]);
 
   if (!token) {
     return null;
@@ -145,36 +150,41 @@ function LandingPage() {
       title: "Web Tracker",
       link: "/web-tracker?sort-by=recently-tracked&sort-order=asc",
       svg: (
-        <svg
-          width="29"
-          height="24"
-          viewBox="0 0 29 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <g clip-path="url(#clip0_201_95641)">
-            <path
-              d="M14.3121 0.0476074C8.5465 0.0476074 3.64806 4.25464 2.58165 9.73902H0.917596C0.0738468 9.73902 -0.137091 10.3132 0.31994 10.9695L2.94494 14.696C3.33165 15.2351 3.89415 15.2234 4.26915 14.696L6.89415 10.9578C7.33947 10.3132 7.12853 9.73902 6.2965 9.73902H4.609C5.61681 5.30933 9.55431 2.05152 14.3121 2.05152C17.652 2.06323 20.5817 3.6687 22.3746 6.1648C22.7262 6.64527 23.2887 6.79761 23.7692 6.49292C24.2496 6.21167 24.3785 5.56714 23.9801 5.05152C21.7535 2.06323 18.2614 0.0476074 14.3121 0.0476074ZM14.3121 23.9538C20.0778 23.9538 24.9762 19.7351 26.0426 14.2624H27.695C28.5387 14.2624 28.7614 13.6882 28.2926 13.032L25.6793 9.30542C25.2926 8.76636 24.7301 8.77808 24.3551 9.30542L21.7301 13.0437C21.2731 13.6882 21.4957 14.2624 22.3278 14.2624H24.027C23.0075 18.6804 19.0582 21.9617 14.3121 21.9617C10.9723 21.9499 8.04259 20.3328 6.24962 17.8367C5.88634 17.3562 5.33556 17.2038 4.84337 17.4968C4.37462 17.7898 4.24572 18.4343 4.64415 18.9499C6.87072 21.9382 10.3629 23.9538 14.3121 23.9538Z"
-              fill="white"
-              fill-opacity="0.85"
-            />
-            <path
-              d="M13.8668 5.13354C13.3512 5.13354 12.9293 5.5437 12.9293 6.05933V12.5984C12.9293 12.8679 13.0114 13.1023 13.2106 13.3601L16.1051 17.1804C16.4918 17.6843 17.0309 17.7664 17.5114 17.4382C17.945 17.1335 17.9801 16.5828 17.6285 16.1023L13.7262 10.8406L14.7926 14.1218V6.05933C14.7926 5.5437 14.3825 5.13354 13.8668 5.13354Z"
-              fill="white"
-              fill-opacity="0.85"
-            />
-          </g>
-          <defs>
-            <clipPath id="clip0_201_95641">
-              <rect
-                width="28.4498"
-                height="23.918"
+        <>
+          <svg
+            width="29"
+            height="24"
+            viewBox="0 0 29 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <g clip-path="url(#clip0_201_95641)">
+              <path
+                d="M14.3121 0.0476074C8.5465 0.0476074 3.64806 4.25464 2.58165 9.73902H0.917596C0.0738468 9.73902 -0.137091 10.3132 0.31994 10.9695L2.94494 14.696C3.33165 15.2351 3.89415 15.2234 4.26915 14.696L6.89415 10.9578C7.33947 10.3132 7.12853 9.73902 6.2965 9.73902H4.609C5.61681 5.30933 9.55431 2.05152 14.3121 2.05152C17.652 2.06323 20.5817 3.6687 22.3746 6.1648C22.7262 6.64527 23.2887 6.79761 23.7692 6.49292C24.2496 6.21167 24.3785 5.56714 23.9801 5.05152C21.7535 2.06323 18.2614 0.0476074 14.3121 0.0476074ZM14.3121 23.9538C20.0778 23.9538 24.9762 19.7351 26.0426 14.2624H27.695C28.5387 14.2624 28.7614 13.6882 28.2926 13.032L25.6793 9.30542C25.2926 8.76636 24.7301 8.77808 24.3551 9.30542L21.7301 13.0437C21.2731 13.6882 21.4957 14.2624 22.3278 14.2624H24.027C23.0075 18.6804 19.0582 21.9617 14.3121 21.9617C10.9723 21.9499 8.04259 20.3328 6.24962 17.8367C5.88634 17.3562 5.33556 17.2038 4.84337 17.4968C4.37462 17.7898 4.24572 18.4343 4.64415 18.9499C6.87072 21.9382 10.3629 23.9538 14.3121 23.9538Z"
                 fill="white"
-                transform="translate(0.0839844 0.0476074)"
+                fill-opacity="0.85"
               />
-            </clipPath>
-          </defs>
-        </svg>
+              <path
+                d="M13.8668 5.13354C13.3512 5.13354 12.9293 5.5437 12.9293 6.05933V12.5984C12.9293 12.8679 13.0114 13.1023 13.2106 13.3601L16.1051 17.1804C16.4918 17.6843 17.0309 17.7664 17.5114 17.4382C17.945 17.1335 17.9801 16.5828 17.6285 16.1023L13.7262 10.8406L14.7926 14.1218V6.05933C14.7926 5.5437 14.3825 5.13354 13.8668 5.13354Z"
+                fill="white"
+                fill-opacity="0.85"
+              />
+            </g>
+            <defs>
+              <clipPath id="clip0_201_95641">
+                <rect
+                  width="28.4498"
+                  height="23.918"
+                  fill="white"
+                  transform="translate(0.0839844 0.0476074)"
+                />
+              </clipPath>
+            </defs>
+          </svg>
+          {(storedrunningProjectId || runningProjectId) && (
+            <div className="max-w-[10px] min-h-[10px] w-full bg-[#35bf8a] rounded-[50%] absolute ml-[20px] mt-[-5px] animate-plus		"></div>
+          )}
+        </>
       ),
     },
     {

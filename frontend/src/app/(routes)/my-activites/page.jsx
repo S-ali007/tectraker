@@ -56,7 +56,7 @@ function Page() {
   if (!storedDate) {
     return localStorage?.setItem("startQuery", startQuery);
   }
- 
+
   const formatDateRoute = (dateString) => {
     return dateString.toLocaleDateString("en-GB");
   };

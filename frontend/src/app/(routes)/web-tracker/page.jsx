@@ -5,10 +5,11 @@ import {
   setProjectDescription,
   setTaskDuration,
 } from "@/app/features/projectSlice";
+import { setRunningProjectId } from "@/app/features/timerSlice";
 import WebTracker from "@/assets/icons/WebTracker";
 import Cookies from "js-cookie";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -17,10 +18,13 @@ function Page() {
 
   const sortBy = searchParams.get("sort-by") || "name";
   const sortOrder = searchParams.get("sort-order") || "asc";
-  const [runningProjectId, setRunningProjectId] = useState(null);
+  // const [runningProjectId, setRunningProjectId] = useState(null);
+  const actionRef = useRef(null);
+
   const [timer, setTimer] = useState(0);
   const [startTime, setStartTime] = useState(null);
   const [timerId, setTimerId] = useState(null);
+  const [activeAction, setActiveAction] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const dispatch = useDispatch();
   const router = useRouter();
@@ -28,7 +32,7 @@ function Page() {
   const { projects, projectDescription, taskDuration } = useSelector(
     (state) => state.project
   );
-
+  const { runningProjectId } = useSelector((state) => state.time);
   const handleSort = (field) => {
     const newSortOrder =
       sortBy === field && sortOrder === "asc" ? "desc" : "asc";
@@ -69,7 +73,7 @@ function Page() {
     if (savedProjectId && savedStartTime) {
       const timeElapsed =
         (Date.now() - new Date(savedStartTime).getTime()) / 1000;
-      setRunningProjectId(savedProjectId);
+      dispatch(setRunningProjectId(savedProjectId));
       setStartTime(new Date(savedStartTime));
       setTimer(parseInt(savedTimer) + Math.floor(timeElapsed));
       const intervalId = setInterval(() => {
@@ -86,8 +90,9 @@ function Page() {
   }, []);
 
   const startTimer = (projectId) => {
+    setActiveAction(true);
     const currentStartTime = new Date();
-    setRunningProjectId(projectId);
+    dispatch(setRunningProjectId(projectId));
     setStartTime(currentStartTime);
     const intervalId = setInterval(() => {
       setTimer((prevTime) => prevTime + 1);
@@ -124,43 +129,60 @@ function Page() {
     return `${minutes} min ${seconds < 10 ? "0" : ""}${seconds} sec`;
   };
 
+  function debounce(func, delay) {
+    let timer;
+    return function (...args) {
+      clearTimeout(timer);
+      timer = setTimeout(() => func.apply(this, args), delay);
+    };
+  }
+
+  const handleTimeCore = async (projectId) => {
+    const token = Cookies.get("accessToken");
+    const endTime = new Date();
+
+    const res = await api.post(
+      `/api/v1/project/${projectId}/time-entries`,
+      {
+        user_id: loggedInUserId, 
+        task_name: projectDescription,
+        start_time: startTime,
+        end_time: endTime,
+      },
+      {
+        headers: {
+          Authorization: token,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    dispatch(setTaskDuration(res.data.data.activties));
+
+    const updatedProjects = await api.get(
+      `/api/v1/project/projects?sort-by=${sortBy}&sort-order=${sortOrder}`,
+      {
+        headers: {
+          Authorization: token,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    dispatch(setAllProjects(updatedProjects.data));
+  };
+
+  const debouncedHandleTimeCore = debounce(handleTimeCore, 300);
+
   const handleTime = async (projectId) => {
     try {
-      const token = Cookies.get("accessToken");
-
-      setSelectedProjectId(projectId);
-      const endTime = new Date();
-
-      const res = await api.post(
-        `/api/v1/project/${projectId}/time-entries`,
-        {
-          user_id: projectId,
-          task_name: projectDescription,
-          start_time: startTime,
-          end_time: endTime,
-        },
-        {
-          headers: {
-            Authorization: token,
-            "Content-Type": "application/json",
-          },
-        }
+      await debouncedHandleTimeCore(projectId);
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.errors || "Failed to record time entry"
       );
-      dispatch(setTaskDuration(res.data.data.activties));
-
-      const updatedProjects = await api.get(
-        `/api/v1/project/projects?sort-by=${sortBy}&sort-order=${sortOrder}`,
-        {
-          headers: {
-            Authorization: token,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      dispatch(setAllProjects(updatedProjects.data));
-
+    } finally {
       clearInterval(timerId);
-      setRunningProjectId(null);
+      dispatch(setRunningProjectId(null));
       dispatch(setProjectDescription(""));
       setTimer(0);
 
@@ -169,12 +191,75 @@ function Page() {
       localStorage.removeItem("timer");
 
       toast.success("Tracked successfully!");
-    } catch (error) {
-      toast.error(
-        error?.response?.data?.errors || "Failed to record time entry"
-      );
     }
   };
+
+  // const handleTime = async (projectId) => {
+  //   try {
+  //     const token = Cookies.get("accessToken");
+
+  //     setSelectedProjectId(projectId);
+  //     const endTime = new Date();
+
+  //     const res = await api.post(
+  //       `/api/v1/project/${projectId}/time-entries`,
+  //       {
+  //         user_id: projectId,
+  //         task_name: projectDescription,
+  //         start_time: startTime,
+  //         end_time: endTime,
+  //       },
+  //       {
+  //         headers: {
+  //           Authorization: token,
+  //           "Content-Type": "application/json",
+  //         },
+  //       }
+  //     );
+
+  //     dispatch(setTaskDuration(res.data.data.activties));
+
+  //     const updatedProjects = await api.get(
+  //       `/api/v1/project/projects?sort-by=${sortBy}&sort-order=${sortOrder}`,
+  //       {
+  //         headers: {
+  //           Authorization: token,
+  //           "Content-Type": "application/json",
+  //         },
+  //       }
+  //     );
+  //     dispatch(setAllProjects(updatedProjects.data));
+
+  //     clearInterval(timerId);
+  //     dispatch(setRunningProjectId(null));
+  //     dispatch(setProjectDescription(""));
+  //     setTimer(0);
+
+  //     localStorage.removeItem("runningProjectId");
+  //     localStorage.removeItem("startTime");
+  //     localStorage.removeItem("timer");
+
+  //     toast.success("Tracked successfully!");
+  //   } catch (error) {
+  //     toast.error(
+  //       error?.response?.data?.errors || "Failed to record time entry"
+  //     );
+  //   }
+  //   finally{
+
+  //   }
+  // };
+  const handleClickOutside = (event) => {
+    if (actionRef.current && !actionRef.current.contains(event.target)) {
+      setActiveAction(false);
+    }
+  };
+  useEffect(() => {
+    document.addEventListener("click", handleClickOutside, true);
+    return () => {
+      document.removeEventListener("click", handleClickOutside, true);
+    };
+  }, []);
   return (
     <div className=" w-full px-[50px] py-[32px]">
       <h1 className="text-[21px] leading-[24px] font-[700] text-[#404040]">
@@ -208,20 +293,24 @@ function Page() {
               </div>
             </ul>
             {projects.map((item) => {
-              console.log(item);
+              const todayDate = new Date().toISOString().split("T")[0];
 
-              const todayDate = new Date().toISOString().split('T')[0];
-              
-              const todayDateEntry = item.dates?.find(dateItem => dateItem.date === todayDate);
-              
-              const relevantDate = todayDateEntry || item.dates?.[item.dates.length - 1] || null;
-            
-              const latestTimeEntry = relevantDate?.activities?.[relevantDate.activities.length - 1] || null;
-            
+              const todayDateEntry = item.dates?.find(
+                (dateItem) => dateItem.date === todayDate
+              );
+
+              const relevantDate =
+                todayDateEntry || item.dates?.[item.dates.length - 1] || null;
+
+              const latestTimeEntry =
+                relevantDate?.activities?.[
+                  relevantDate.activities.length - 1
+                ] || null;
+
               return (
                 <div
                   key={item._id}
-                  className=" w-full p-[10px] border-t border-[#e6e9ed] flex"
+                  className=" w-full p-[10px] border-t border-[#e6e9ed] flex hover:bg-[#fbfdff] "
                 >
                   <div className="flex items-center gap-[30px] w-full">
                     <div className="project_icon bg-[#c2c7cd] max-w-[40px] w-full flex justify-center items-center p-2 rounded-[50%]">
@@ -251,45 +340,79 @@ function Page() {
                         </defs>
                       </svg>
                     </div>
-                    <div className="">
+                    <div className="w-full">
                       <h1 className="text-[17px] text-[#404040] ">
                         {item.name}
                       </h1>
-                      <p className="text-[11px] text-[#acb3bb] w-full ">
-                        {runningProjectId === item._id
-                          ? `Working on: ${projectDescription}`
-                          : latestTimeEntry &&
+                      {activeAction === false && (
+                        <div className="text-[11px] text-[#acb3bb]  flex ">
+                          {runningProjectId === item._id ? (
+                            <div className="flex w-full">
+                              <p>Working on: {projectDescription}</p>
+
+                              <div className="w-full max-w-[11px] flex justify-center items-center ml-[10px]">
+                                <svg
+                                  fill="#acb3bb"
+                                  viewBox="0 0 528.899 528.899"
+                                  className=""
+                                  onClick={() => setActiveAction(true)}
+                                >
+                                  <g
+                                    id="SVGRepo_bgCarrier"
+                                    stroke-width="0"
+                                  ></g>
+                                  <g
+                                    id="SVGRepo_tracerCarrier"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                  ></g>
+                                  <g id="SVGRepo_iconCarrier">
+                                    {" "}
+                                    <g>
+                                      {" "}
+                                      <path d="M328.883,89.125l107.59,107.589l-272.34,272.34L56.604,361.465L328.883,89.125z M518.113,63.177l-47.981-47.981 c-18.543-18.543-48.653-18.543-67.259,0l-45.961,45.961l107.59,107.59l53.611-53.611 C532.495,100.753,532.495,77.559,518.113,63.177z M0.3,512.69c-1.958,8.812,5.998,16.708,14.811,14.565l119.891-29.069 L27.473,390.597L0.3,512.69z"></path>{" "}
+                                    </g>{" "}
+                                  </g>
+                                </svg>
+                              </div>
+                            </div>
+                          ) : (
+                            latestTimeEntry &&
                             `Last task duration: ${formatTime(
                               latestTimeEntry.duration
-                            )}`}
-                      </p>
+                            )}`
+                          )}
+                        </div>
+                      )}
+
+                      {runningProjectId === item._id && activeAction && (
+                        <div className=" w-full pr-[40px]">
+                          <input
+                            placeholder="Briefly describe what you are doing on"
+                            type="text"
+                            className="w-full px-[8px] py-[8px] mt-1 text-[13px] text-gray-700 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#4a90e2]"
+                            value={projectDescription}
+                            onChange={(e) =>
+                              dispatch(setProjectDescription(e.target.value))
+                            }
+                            onBlur={handleTaskNameSubmit}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleTaskNameSubmit();
+                            }}
+                            ref={actionRef}
+                          />
+                        </div>
+                      )}
                     </div>
-                    {runningProjectId === item._id && (
-                      <div className="flex items-center space-x-1 w-full">
-                        <input
-                          placeholder="Briefly describe what you are doing"
-                          type="text"
-                          className="px-2 py-1 w-full border rounded-md focus:outline-none"
-                          value={projectDescription}
-                          onChange={(e) =>
-                            dispatch(setProjectDescription(e.target.value))
-                          }
-                          onBlur={handleTaskNameSubmit}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") handleTaskNameSubmit();
-                          }}
-                        />
-                      </div>
-                    )}
                   </div>
 
                   <div
-                    className={
-                      "    flex justify-center gap-[20px] items-center  max-w-[160px] w-full pl-[8px]"
-                    }
+                    className={`   flex justify-center  items-center  max-w-[160px] w-full ${
+                      runningProjectId === item._id ? "pr-[16px] " : "pl-[90px]"
+                    }`}
                   >
                     {runningProjectId === item._id && (
-                      <div className="text-green-500 w-full max-w-[100px] ">
+                      <div className="text-[#303030]  font-[600] text-[16px] max-w-[150px] w-full ">
                         {formatTime(timer)}
                       </div>
                     )}
