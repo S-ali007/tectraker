@@ -44,7 +44,7 @@ function Page() {
   const [workedTo, setWorkedTo] = useState("");
 
   const dispatch = useDispatch();
-  const { projects, selectedProjects, timeEntriesForProjects } = useSelector(
+  const { projects, selectedProjects,   } = useSelector(
     (state) => state.project
   );
   const actionRef = useRef(null);

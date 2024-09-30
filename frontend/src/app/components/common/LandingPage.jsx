@@ -27,7 +27,7 @@ function LandingPage() {
       setStoredEndQuery(endQuery);
       setRunningProjectId(storedProject);
     }
-  }, [storedrunningProjectId]);
+  }, [storedrunningProjectId,runningProjectId]);
 
   if (!token) {
     return null;
