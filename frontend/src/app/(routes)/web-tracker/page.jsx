@@ -144,7 +144,7 @@ function Page() {
     const res = await api.post(
       `/api/v1/project/${projectId}/time-entries`,
       {
-        user_id: loggedInUserId, 
+        user_id: projectId,
         task_name: projectDescription,
         start_time: startTime,
         end_time: endTime,
