@@ -42,11 +42,10 @@ function Page() {
   const [duration, setDuration] = useState("");
   const [workedFrom, setWorkedFrom] = useState("");
   const [workedTo, setWorkedTo] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch();
-  const { projects, selectedProjects,   } = useSelector(
-    (state) => state.project
-  );
+  const { projects, selectedProjects } = useSelector((state) => state.project);
   const actionRef = useRef(null);
   const today = Date.now();
   const startQuery = startDate.toLocaleDateString("en-GB");
@@ -84,6 +83,8 @@ function Page() {
     const fetchProjects = async () => {
       const token = Cookies.get("accessToken");
       if (!token) return router.push("/login");
+      setLoading(true);
+
       try {
         const response = await api.get(
           `/api/v1/project/projects?sort-by=${sortBy}&sort-order=${sortOrder}`,
@@ -100,6 +101,8 @@ function Page() {
         }
       } catch (error) {
         toast.error(error?.response?.data?.errors || "An error occurred");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -110,30 +113,32 @@ function Page() {
     const fetchProjectsWithUrlParams = async () => {
       const token = Cookies.get("accessToken");
       const storedStartQuery = localStorage?.getItem("startQuery");
+      setLoading(true);
 
-      if (allProjects === "all") {
-        const allProjectIds = projects.map((project) => project._id);
-        dispatch(setSelectedProjects(allProjectIds));
-        router.push(
-          `/my-activites?start=${storedStartQuery}&end=${endQuery}&projects=${projects
-            .map((project) => project._id)
-            .join("-")}`
-        );
-        const res = await api.get(
-          `/api/v1/project/user/my-activites?start=${storedStartQuery}&end=${endQuery}&projects=${projects
-            .map((project) => project._id)
-            .join("-")}`,
-          {
-            headers: {
-              Authorization: token,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        const filtered = res.data.data.filterProjects;
-        setFilteredProject(filtered);
-      } else if (projects) {
-        try {
+      try {
+        if (allProjects === "all") {
+          const allProjectIds = projects.map((project) => project._id);
+          dispatch(setSelectedProjects(allProjectIds));
+          router.push(
+            `/my-activites?start=${storedStartQuery}&end=${endQuery}&projects=${projects
+              .map((project) => project._id)
+              .join("-")}`
+          );
+
+          const res = await api.get(
+            `/api/v1/project/user/my-activites?start=${storedStartQuery}&end=${endQuery}&projects=${projects
+              .map((project) => project._id)
+              .join("-")}`,
+            {
+              headers: {
+                Authorization: token,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          const filtered = res.data.data.filterProjects;
+          setFilteredProject(filtered);
+        } else if (projects) {
           const res = await api.get(
             `/api/v1/project/user/my-activites?start=${storedStartQuery}&end=${endQuery}&projects=${projects
               .map((project) => project._id)
@@ -149,13 +154,15 @@ function Page() {
           setFilteredProject(filtered);
           const allProjectIds = projects.map((project) => project._id);
           const dataProject = allProjects.split("-");
-          if (dataProject != "none") {
-            dispatch(setSelectedProjects(allProjects.split("-")));
+          if (dataProject !== "none") {
+            dispatch(setSelectedProjects(dataProject));
           }
-        } catch (error) {
-          toast.error("Failed to fetch time entries.");
-          console.error(error);
         }
+      } catch (error) {
+        toast.error("Failed to fetch time entries.");
+        console.error(error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -385,6 +392,10 @@ function Page() {
       toast.error(error);
     }
   };
+  if (loading) {
+    return <div className="text-center">Loading...</div>;
+  }
+
   return (
     <div className="w-full px-[50px] py-[32px]">
       <h1 className="text-[21px] leading-[24px] font-[700] text-[#404040]">
