@@ -113,7 +113,6 @@ function Page() {
     const fetchProjectsWithUrlParams = async () => {
       const token = Cookies.get("accessToken");
       const storedStartQuery = localStorage?.getItem("startQuery");
-      setLoading(true);
 
       try {
         if (allProjects === "all") {
@@ -161,8 +160,6 @@ function Page() {
       } catch (error) {
         toast.error("Failed to fetch time entries.");
         console.error(error);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -392,9 +389,6 @@ function Page() {
       toast.error(error);
     }
   };
-  if (loading) {
-    return <div className="text-center">Loading...</div>;
-  }
 
   return (
     <div className="w-full px-[50px] py-[32px]">
@@ -507,7 +501,7 @@ function Page() {
           selectedProjects={selectedProjects}
           toggleProjectSelection={toggleProjectSelection}
           handleDeselectSelect={handleDeselectSelect}
-          extraClasses={"mt-[280px]"}
+          extraClasses={"mt-[45px]"}
         />
         {/* date btn */}
 
@@ -541,7 +535,15 @@ function Page() {
                     <div key={index} className="mb-4">
                       {/* <h2>{project.name}</h2> */}
                       <ul className=" flex flex-col gap-[3px]">
-                        <div>{formatDate(project.date)}</div>
+                        {project.activities   ? (
+                          <div>{formatDate(project.date)}</div>
+                        ) : (
+                          <>
+                            You don’t have any activities yet. TopTracker
+                            desktop application or use Web Tracker to start
+                            tracking your work immediately.
+                          </>
+                        )}
                         <div>
                           {project?.activities?.map((items) =>
                             Object.values(items).map((entry, index) => {
