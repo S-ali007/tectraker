@@ -20,6 +20,7 @@ const userAgentSchema = new Schema({
 
 const activitySchema = new Schema({
   user_id: { type: String, required: true },
+  project_name: { type: String },
   task_name: { type: String },
   // offline: { type: Boolean, required: true },
   // offline_type: { type: String, required: true },

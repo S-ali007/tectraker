@@ -66,16 +66,28 @@ function Page() {
   const formatTimeRange = (start, end) => {
     const formatTime = (dateStr) => {
       const date = new Date(dateStr);
-      const hours = date.getUTCHours();
-      const minutes = date.getUTCMinutes();
-      const ampm = hours <= 12 ? "pm" : "am";
-      const formattedHours = hours % 12 || 12;
-      const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-      return `${formattedHours}:${formattedMinutes}${ampm}`;
+      let hours = date.getHours();
+      let minutes = date.getMinutes();
+
+      const ampm = hours >= 12 ? "PM" : "AM";
+      hours = hours % 12 || 12;
+
+      minutes = minutes < 10 ? `0${minutes}` : minutes;
+
+      return `${hours}:${minutes} ${ampm}`;
     };
 
     return `${formatTime(start)} — ${formatTime(end)}`;
   };
+  const formatDuration = (durationInSeconds) => {
+    if (durationInSeconds < 60) {
+      return "Less than a minute";
+    } else {
+      const minutes = Math.floor(durationInSeconds / 60);
+      return `${minutes} minutes`;
+    }
+  };
+
   const updatedQueryParams = new URLSearchParams(searchParams);
   const allProjects = updatedQueryParams.get("projects");
 
@@ -136,7 +148,17 @@ function Page() {
             }
           );
           const filtered = res.data.data.filterProjects;
-          setFilteredProject(filtered);
+
+          const validFilteredProjects = filtered.filter(
+            (project) =>
+              project?.activities?.length > 0 &&
+              project.activities.some(
+                (activity) => Object.keys(activity).length > 0
+              )
+          );
+
+          console.log(validFilteredProjects);
+          setFilteredProject(validFilteredProjects);
         } else if (projects) {
           const res = await api.get(
             `/api/v1/project/user/my-activites?start=${storedStartQuery}&end=${endQuery}&projects=${projects
@@ -150,7 +172,18 @@ function Page() {
             }
           );
           const filtered = res.data.data.filterProjects;
-          setFilteredProject(filtered);
+
+          const validFilteredProjects = filtered.filter(
+            (project) =>
+              project?.activities?.length > 0 &&
+              project.activities.some(
+                (activity) => Object.keys(activity).length > 0
+              )
+          );
+
+          console.log(validFilteredProjects);
+          setFilteredProject(validFilteredProjects);
+
           const allProjectIds = projects.map((project) => project._id);
           const dataProject = allProjects.split("-");
           if (dataProject !== "none") {
@@ -310,7 +343,16 @@ function Page() {
         }
       );
       const filtered = res.data.data.filterProjects;
-      setFilteredProject(filtered);
+
+      const validFilteredProjects = filtered.filter(
+        (project) =>
+          project?.activities?.length > 0 &&
+          project.activities.some(
+            (activity) => Object.keys(activity).length > 0
+          )
+      );
+
+      setFilteredProject(validFilteredProjects);
     } catch (error) {
       toast.error("Please select project.");
     }
@@ -530,112 +572,108 @@ function Page() {
 
             <div className="px-4 pt-4 bg-white rounded-lg shadow-md ">
               {selectedProjects.length > 0 ? (
-                filteredProject?.map((project, index) => {
-                  return (
-                    <div key={index} className="mb-4">
-                      {/* <h2>{project.name}</h2> */}
-                      <ul className=" flex flex-col gap-[3px]">
-                        {project.activities   ? (
+                filteredProject
+                  ?.filter((project) => project?.activities?.length > 0)
+                  .map((project, index) => {
+                    return (
+                      <div key={index} className="mb-4">
+                        <h2>{project.name}</h2>
+                        <ul className="flex flex-col gap-[3px]">
                           <div>{formatDate(project.date)}</div>
-                        ) : (
-                          <>
-                            You don’t have any activities yet. TopTracker
-                            desktop application or use Web Tracker to start
-                            tracking your work immediately.
-                          </>
-                        )}
-                        <div>
-                          {project?.activities?.map((items) =>
-                            Object.values(items).map((entry, index) => {
-                              return (
-                                <li
-                                  key={index}
-                                  className="text-gray-600 flex gap-[20px] py-[16px] px-[8px] border-y-[#e6e9ed] border-y"
-                                >
-                                  <div className=" max-w-[144px] w-full">
-                                    <div className="text-[13px] text-[#404040] font-[600]">
-                                      {/* created at */}
-                                      at{" "}
-                                      {formatTimeRange(
-                                        entry.start_time,
-                                        entry.end_time
-                                      )}
+                          <div>
+                            {project?.activities?.map((items) =>
+                              Object.values(items).map((entry, index) => {
+                                return (
+                                  <li
+                                    key={index}
+                                    className="text-gray-600 flex gap-[20px] py-[16px] px-[8px] border-y-[#e6e9ed] border-y"
+                                  >
+                                    <div className="max-w-[144px] w-full">
+                                      <div className="text-[13px] text-[#404040] font-[600]">
+                                        {/* created at */}
+                                        at{" "}
+                                        {formatTimeRange(
+                                          entry.start_time,
+                                          entry.end_time
+                                        )}
+                                      </div>
+                                      {/* less than a minute */}
+                                      <div className="text-[#acb3bb] text-[11px]">
+                                        {formatDuration(entry.duration)}
+                                      </div>
                                     </div>
-                                    {/* less then a minute */}
-                                    <div className="text-[#acb3bb] text-[11px]">
-                                      {entry.duration}
-                                    </div>
-                                  </div>
-                                  <div className=" w-full ">
-                                    <div className=" text-[#303030] text-[17px]">
-                                      {entry.task_name === ""
-                                        ? "Unamed Activity"
-                                        : entry.task_name}
-                                    </div>
-                                    <div className="w-full text-[#acb3bb] text-[11px]">
-                                      {project.name}
-                                    </div>
-                                  </div>
-                                  <div className="w-full max-w-[336px] flex gap-[30px]">
-                                    <div className="max-w-[125px] w-full ">
-                                      <div className="text-[13px]">
-                                        0 keyboard hits
+                                    <div className="w-full">
+                                      <div className="text-[#303030] text-[17px]">
+                                        {entry.task_name === ""
+                                          ? "Unnamed Activity"
+                                          : entry.task_name}
                                       </div>
                                       <div className="w-full text-[#acb3bb] text-[11px]">
-                                        0 mouseclicks
+                                        {entry.project_name}
                                       </div>
                                     </div>
-                                    {/* Web Tracker Activity */}
-                                    <div className="max-w-[172px] w-full flex">
-                                      <div className="max-w-[42px] w-full">
-                                        {/*  */}
-                                        <ActivityMsg />
-                                      </div>
-                                      <div className="text-[11px] text-[#acb3bb] w-full flex items-center">
-                                        Web Tracker Activity
-                                      </div>
-                                      <div
-                                        className="flex  items-center text-[20px] cursor-pointer "
-                                        onClick={() => handleAction(entry._id)}
-                                      >
-                                        ...
-                                      </div>
-                                      {active === entry._id && (
-                                        <div
-                                          className="absolute  mt-[40px] max-w-[200px] w-full p-[8px] bg-white rounded-md shadow-lg z-20"
-                                          ref={actionRef}
-                                        >
-                                          <ul className="py-1">
-                                            <button
-                                              onClick={() =>
-                                                handleUpdate(entry._id)
-                                              }
-                                              className=" w-full text-gray-700  px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer items-start flex"
-                                            >
-                                              Edit
-                                            </button>
-                                            <button
-                                              onClick={() =>
-                                                handleDelete(entry._id)
-                                              }
-                                              className="text-red-600 w-full  px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer items-start flex"
-                                            >
-                                              Delete
-                                            </button>
-                                          </ul>
+                                    <div className="w-full max-w-[336px] flex gap-[30px]">
+                                      <div className="max-w-[125px] w-full">
+                                        <div className="text-[13px]">
+                                          0 keyboard hits
                                         </div>
-                                      )}
+                                        <div className="w-full text-[#acb3bb] text-[11px]">
+                                          0 mouseclicks
+                                        </div>
+                                      </div>
+                                      {/* Web Tracker Activity */}
+                                      <div className="max-w-[172px] w-full flex">
+                                        <div className="max-w-[42px] w-full">
+                                          {/* Activity Msg */}
+                                          <ActivityMsg />
+                                        </div>
+                                        <div className="text-[11px] text-[#acb3bb] w-full flex items-center">
+                                          Web Tracker Activity
+                                        </div>
+                                        <div
+                                          className="flex items-center text-[20px] cursor-pointer"
+                                          onClick={() =>
+                                            handleAction(entry._id)
+                                          }
+                                        >
+                                          ...
+                                        </div>
+                                        {active === entry._id && (
+                                          <div
+                                            className="absolute mt-[40px] max-w-[200px] w-full p-[8px] bg-white rounded-md shadow-lg z-20"
+                                            ref={actionRef}
+                                          >
+                                            <ul className="py-1">
+                                              <button
+                                                onClick={() =>
+                                                  handleUpdate(entry._id)
+                                                }
+                                                className="w-full text-gray-700 px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer items-start flex"
+                                              >
+                                                Edit
+                                              </button>
+                                              <button
+                                                onClick={() =>
+                                                  handleDelete(entry._id)
+                                                }
+                                                className="text-red-600 w-full px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer items-start flex"
+                                              >
+                                                Delete
+                                              </button>
+                                            </ul>
+                                          </div>
+                                        )}
+                                      </div>
                                     </div>
-                                  </div>
-                                </li>
-                              );
-                            })
-                          )}
-                        </div>
-                      </ul>
-                    </div>
-                  );
-                })
+                                  </li>
+                                );
+                              })
+                            )}
+                          </div>
+                        </ul>
+                      </div>
+                    );
+                  })
               ) : (
                 <div className="pb-[20px]">No projects selected.</div>
               )}

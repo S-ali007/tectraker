@@ -140,7 +140,6 @@ function Page() {
   const handleTimeCore = async (projectId) => {
     const token = Cookies.get("accessToken");
     const endTime = new Date();
-
     const res = await api.post(
       `/api/v1/project/${projectId}/time-entries`,
       {

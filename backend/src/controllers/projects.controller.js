@@ -183,7 +183,6 @@ const archiveProject = asyncHandler(async (req, res) => {
 const addTimeEntry = asyncHandler(async (req, res) => {
   try {
     const { user_id, task_name, start_time, end_time } = req.body;
-
     if (!user_id || !start_time) {
       return res.status(400).json(new ApiError(400, "Missing required fields"));
     }
@@ -217,6 +216,7 @@ const addTimeEntry = asyncHandler(async (req, res) => {
       start_time,
       end_time,
       duration,
+      project_name: project.name,
     });
 
     await project.save();
