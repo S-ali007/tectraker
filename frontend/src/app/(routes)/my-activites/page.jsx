@@ -45,7 +45,9 @@ function Page() {
   const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch();
-  const { projects, selectedProjects } = useSelector((state) => state.project);
+  const { projects, selectedProjects, timeEntriesForProjects } = useSelector(
+    (state) => state.project
+  );
   const actionRef = useRef(null);
   const today = Date.now();
   const startQuery = startDate.toLocaleDateString("en-GB");
@@ -258,6 +260,29 @@ function Page() {
     if (!updatedSelectedProjects.length) {
       updatedQueryParams.delete("projects");
     }
+    if (updatedSelectedProjects.length > 0) {
+      try {
+        const token = Cookies.get("accessToken");
+        const res = await api.get(
+          `/api/v1/project/user/my-activites?start=${startQuery}&end=${endQuery}&projects=${
+            updatedSelectedProjects.length > 0
+              ? updatedSelectedProjects.join("-")
+              : "none"
+          }`,
+          {
+            headers: {
+              Authorization: token,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        const filtered = res.data.data.filterProjects;
+        setFilteredProject(filtered);
+      } catch (error) {
+        toast.error("Failed to fetch time entries.");
+        console.error(error);
+      }
+    }
 
     router.push(
       `/my-activites?start=${startQuery}&end=${endQuery}&projects=${
@@ -303,9 +328,7 @@ function Page() {
   const handleAction = (id) => {
     setActive(active === id ? null : id);
   };
-  const handleActions = () => {
-    setActiveAction(true);
-  };
+ 
   const handleClickOutside = (event) => {
     if (actionRef.current && !actionRef.current.contains(event.target)) {
       setActiveAction(null);

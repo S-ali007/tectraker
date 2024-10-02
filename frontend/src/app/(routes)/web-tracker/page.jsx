@@ -101,7 +101,7 @@ function Page() {
 
     localStorage.setItem("runningProjectId", projectId);
     localStorage.setItem("startTime", currentStartTime);
-    // localStorage.setItem("timer", 0);
+    localStorage.setItem("timer", 0);
   };
 
   useEffect(() => {
@@ -193,61 +193,6 @@ function Page() {
     }
   };
 
-  // const handleTime = async (projectId) => {
-  //   try {
-  //     const token = Cookies.get("accessToken");
-
-  //     setSelectedProjectId(projectId);
-  //     const endTime = new Date();
-
-  //     const res = await api.post(
-  //       `/api/v1/project/${projectId}/time-entries`,
-  //       {
-  //         user_id: projectId,
-  //         task_name: projectDescription,
-  //         start_time: startTime,
-  //         end_time: endTime,
-  //       },
-  //       {
-  //         headers: {
-  //           Authorization: token,
-  //           "Content-Type": "application/json",
-  //         },
-  //       }
-  //     );
-
-  //     dispatch(setTaskDuration(res.data.data.activties));
-
-  //     const updatedProjects = await api.get(
-  //       `/api/v1/project/projects?sort-by=${sortBy}&sort-order=${sortOrder}`,
-  //       {
-  //         headers: {
-  //           Authorization: token,
-  //           "Content-Type": "application/json",
-  //         },
-  //       }
-  //     );
-  //     dispatch(setAllProjects(updatedProjects.data));
-
-  //     clearInterval(timerId);
-  //     dispatch(setRunningProjectId(null));
-  //     dispatch(setProjectDescription(""));
-  //     setTimer(0);
-
-  //     localStorage.removeItem("runningProjectId");
-  //     localStorage.removeItem("startTime");
-  //     localStorage.removeItem("timer");
-
-  //     toast.success("Tracked successfully!");
-  //   } catch (error) {
-  //     toast.error(
-  //       error?.response?.data?.errors || "Failed to record time entry"
-  //     );
-  //   }
-  //   finally{
-
-  //   }
-  // };
   const handleClickOutside = (event) => {
     if (actionRef.current && !actionRef.current.contains(event.target)) {
       setActiveAction(false);

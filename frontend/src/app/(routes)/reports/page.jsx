@@ -34,7 +34,7 @@ function Page() {
     (state) => state.project
   );
   const tab = searchParams.get("chart");
-
+  
   const updatedQueryParams = new URLSearchParams(searchParams);
   const allProjects = updatedQueryParams.get("projects");
 
