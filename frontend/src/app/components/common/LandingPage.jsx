@@ -14,7 +14,7 @@ function LandingPage() {
   const [storedToken, setStoredToken] = useState(null);
   const { runningProjectId } = useSelector((state) => state.time);
 
-  // const token = Cookies.get("accessToken");
+  const token = Cookies.get("accessToken");
   const path = usePathname();
   const today = Date.now();
   const router = useRouter();
@@ -32,7 +32,7 @@ function LandingPage() {
       setStoredToken(token);
     }
   }, [storedrunningProjectId, runningProjectId, storedToken]);
-  if (!storedToken) {
+  if (!token && !storedToken) {
     return null;
   }
   if (["/login", "/signup", "/verifyemail"].includes(path)) {
