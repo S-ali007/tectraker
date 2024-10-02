@@ -205,7 +205,16 @@ const addTimeEntry = asyncHandler(async (req, res) => {
       dateEntry = {
         date,
         total: 0,
-        activities: [],
+        activities: [
+          {
+            user_id,
+            task_name,
+            start_time,
+            end_time,
+            duration,
+            project_name: project.name,
+          },
+        ],
       };
       project.dates.push(dateEntry);
     }

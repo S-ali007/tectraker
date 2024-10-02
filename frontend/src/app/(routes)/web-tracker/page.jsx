@@ -101,7 +101,7 @@ function Page() {
 
     localStorage.setItem("runningProjectId", projectId);
     localStorage.setItem("startTime", currentStartTime);
-    localStorage.setItem("timer", 0);
+    // localStorage.setItem("timer", 0);
   };
 
   useEffect(() => {
