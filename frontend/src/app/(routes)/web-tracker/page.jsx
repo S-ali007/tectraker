@@ -383,7 +383,10 @@ function Page() {
                         </svg>
                       </button>
                     ) : (
-                      <button onClick={() => startTimer(item._id)}>
+                      <button
+                        disabled={runningProjectId}
+                        onClick={() => startTimer(item._id)}
+                      >
                         <svg
                           fill="#00c386"
                           height="40px"
