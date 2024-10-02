@@ -11,9 +11,10 @@ function LandingPage() {
   const [storedStartQuery, setStoredStartQuery] = useState(null);
   const [storedEndQuery, setStoredEndQuery] = useState(null);
   const [storedrunningProjectId, setRunningProjectId] = useState(null);
+  const [storedToken, setStoredToken] = useState(null);
   const { runningProjectId } = useSelector((state) => state.time);
 
-  const token = Cookies.get("accessToken");
+  // const token = Cookies.get("accessToken");
   const path = usePathname();
   const today = Date.now();
   const router = useRouter();
@@ -23,16 +24,17 @@ function LandingPage() {
       const startQuery = localStorage.getItem("startQuery");
       const endQuery = localStorage.getItem("endQuery");
       const storedProject = localStorage.getItem("runningProjectId");
+      const token = Cookies.get("accessToken");
+
       setStoredStartQuery(startQuery);
       setStoredEndQuery(endQuery);
       setRunningProjectId(storedProject);
+      setStoredToken(token);
     }
-  }, [storedrunningProjectId,runningProjectId]);
-
-  if (!token) {
+  }, [storedrunningProjectId, runningProjectId, storedToken]);
+  if (!storedToken) {
     return null;
   }
-
   if (["/login", "/signup", "/verifyemail"].includes(path)) {
     return null;
   }
