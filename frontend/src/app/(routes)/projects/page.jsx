@@ -239,11 +239,7 @@ function ProjectListPage() {
             }?`}
             yes={handleConfirmArchive}
             no={() => setActionArchive(false)}
-            action={`${
-              tab === "active"
-                ? "Archive"
-                : "Unarchive"
-            }?`}
+            action={`${tab === "active" ? "Archive" : "Unarchive"}?`}
             loading={loading}
           />
         )}
