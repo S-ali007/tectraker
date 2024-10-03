@@ -335,7 +335,7 @@ function Page() {
                             placeholder="Briefly describe what you are doing on"
                             type="text"
                             className="w-full px-[8px] py-[8px] mt-1 text-[13px] text-gray-700 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#4a90e2]"
-                            value={projectDescription}
+                            // value={projectDescription}
                             onChange={(e) =>
                               dispatch(setProjectDescription(e.target.value))
                             }

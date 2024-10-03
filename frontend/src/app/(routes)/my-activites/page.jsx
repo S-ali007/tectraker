@@ -6,7 +6,7 @@ import {
   setTimeEntriesForProject,
 } from "@/app/features/projectSlice";
 import Cookies from "js-cookie";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
@@ -17,7 +17,6 @@ import ActivityMsg from "@/assets/icons/ActivityMsg";
 import YesAndNo from "@/app/components/common/YesAndNo";
 import DropdownDatePicker from "@/app/components/common/DateCalender";
 import SelectProjectsBtn from "@/app/components/common/SelectProjectsBtn";
-<img src="/loading.gif" alt="Loading..." className="w-16 h-16" />;
 
 function Page() {
   const searchParams = useSearchParams();
