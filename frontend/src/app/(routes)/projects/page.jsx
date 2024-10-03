@@ -227,13 +227,23 @@ function ProjectListPage() {
         </div>
         {actionArchive && (
           <YesAndNo
-            heading={"Archive this project?"}
-            para={
-              "Archiving this project will hide it and all its related data from most screens & reports on TopTracker for all users working on the project. You can fully restore it later from the archived projects tab."
-            }
+            heading={`${
+              tab === "active"
+                ? "Archive this project"
+                : "Unarchive this project"
+            }?`}
+            para={`${
+              tab === "active"
+                ? "Archiving this project will hide it and all its related data from most screens & reports on TopTracker for all users working on the project. You can fully restore it later from the archived projects tab."
+                : "Unarchive this project"
+            }?`}
             yes={handleConfirmArchive}
             no={() => setActionArchive(false)}
-            action={"archive"}
+            action={`${
+              tab === "active"
+                ? "Archive"
+                : "Unarchive"
+            }?`}
             loading={loading}
           />
         )}
