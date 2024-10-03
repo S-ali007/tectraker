@@ -90,13 +90,23 @@ const addTeamMembers = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
     const { teamMembers } = req.body;
-
+    const loggedInUserEmail = req.user.email;
     const project = await Project.findById(id);
 
     if (!project) {
       return res.status(404).json(new ApiError(404, "Project not found"));
     }
+    const filteredTeamMembers = teamMembers.filter(
+      (member) => member.email !== loggedInUserEmail
+    );
 
+    if (filteredTeamMembers.length === 0) {
+      return res
+        .status(400)
+        .json(
+          new ApiError(400, {}, "You can't invite yourself to your projects.")
+        );
+    }
     const newTeamMembers = await Team.insertMany(
       teamMembers.map((member) => ({ ...member, project_id: id }))
     );

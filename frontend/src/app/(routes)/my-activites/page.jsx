@@ -159,7 +159,6 @@ function Page() {
               )
           );
 
-          console.log(validFilteredProjects);
           setFilteredProject(validFilteredProjects);
         } else if (projects) {
           const res = await api.get(
@@ -183,7 +182,6 @@ function Page() {
               )
           );
 
-          console.log(validFilteredProjects);
           setFilteredProject(validFilteredProjects);
 
           const allProjectIds = projects.map((project) => project._id);
@@ -328,7 +326,7 @@ function Page() {
   const handleAction = (id) => {
     setActive(active === id ? null : id);
   };
- 
+
   const handleClickOutside = (event) => {
     if (actionRef.current && !actionRef.current.contains(event.target)) {
       setActiveAction(null);

@@ -101,6 +101,8 @@ const ProjectPage = () => {
   };
 
   const handleUpdateProject = async () => {
+    setLoading(true);
+
     try {
       const token = Cookie.get("accessToken");
       const response = await api.put(
@@ -121,6 +123,8 @@ const ProjectPage = () => {
       }
     } catch (error) {
       toast.error(error?.response?.data?.errors || "An error occurred");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -147,6 +151,8 @@ const ProjectPage = () => {
   };
 
   const handleFinish = async () => {
+    setLoading(true);
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     const hasEmptyFields = teamMembers.some(
@@ -155,6 +161,7 @@ const ProjectPage = () => {
 
     if (hasEmptyFields) {
       setEmailError(true);
+      setLoading(false);
       return;
     }
 
@@ -186,6 +193,8 @@ const ProjectPage = () => {
         // console.log(error.response.data.errors);
         // console.error("Failed to add team members", error);
         toast.error(error.response.data.errors);
+      } finally {
+        setLoading(false);
       }
     }
   };
