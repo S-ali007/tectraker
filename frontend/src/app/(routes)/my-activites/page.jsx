@@ -393,7 +393,6 @@ function Page() {
           },
         }
       );
-      console.log(response);
       setActionDelete(false);
 
       // if (response.status === 200) {

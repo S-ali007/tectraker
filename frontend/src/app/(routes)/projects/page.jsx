@@ -72,6 +72,8 @@ function ProjectListPage() {
   };
   const handleConfirmArchive = async () => {
     const token = Cookies.get("accessToken");
+    setLoading(true);
+
     try {
       const response = await api.put(
         `/api/v1/project/${selectedProjectId}/archive`,
@@ -92,6 +94,8 @@ function ProjectListPage() {
       }
     } catch (error) {
       toast.error(error?.response?.data?.errors || "An error occurred");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -124,7 +128,7 @@ function ProjectListPage() {
 
   const handleDeleteProject = async () => {
     const token = Cookies.get("accessToken");
-
+    setLoading(true);
     try {
       const response = await api.delete(
         `/api/v1/project/${selectedProjectId}`,
