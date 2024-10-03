@@ -418,6 +418,7 @@ function Page() {
   };
 
   const handleSubmit = async (e) => {
+    setLoading(true);
     e.preventDefault();
 
     const formData = {
@@ -429,6 +430,7 @@ function Page() {
     };
 
     const token = Cookies.get("accessToken");
+
     try {
       const response = await api.put(
         `/api/v1/project/user/${selectedProjectId}/my-activites`,
@@ -445,7 +447,6 @@ function Page() {
         }
       );
       setActionUpdate(false);
-      console.log(response);
       // if (response.status === 200) {
       //   setActionDelete(false);
       //   toast.success("Project Deleted successfully");
@@ -453,6 +454,8 @@ function Page() {
       // }
     } catch (error) {
       toast.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -482,6 +485,7 @@ function Page() {
                 Edit Activity
               </h3>
               <button
+                disabled={loading}
                 onClick={() => {
                   setActionUpdate(false);
                 }}
@@ -596,123 +600,145 @@ function Page() {
                   extraClasses={"right-12"}
                 />
               </div>
-              <div className=" bg-white rounded-lg shadow-md">
-                <div className="block w-full">
-                  <ul className="flex justify-between text-[14px] pl-[10px] text-gray-400 mt-[40px] border-[#e6e9ed]">
-                    {/* Aug 21Tracked 1 minute content */}
-                  </ul>
-                  {/* entries with respect to selected project */}
+              {filteredProject?.length === 0 ? (
+                <div className="w-full flex flex-col items-center justify-center h-[75vh]">
+                  <MyActivites />
 
-                  <div className="px-4 pt-4 bg-white rounded-lg shadow-md ">
-                    {selectedProjects.length > 0 ? (
-                      filteredProject
-                        ?.filter((project) => project?.activities?.length > 0)
-                        .map((project, index) => {
-                          return (
-                            <div key={index} className="mb-4">
-                              <h2>{project.name}</h2>
-                              <ul className="flex flex-col gap-[3px]">
-                                <div>{formatDate(project.date)}</div>
-                                <div>
-                                  {project?.activities?.map((items) =>
-                                    Object.values(items).map((entry, index) => {
-                                      return (
-                                        <li
-                                          key={index}
-                                          className="text-gray-600 flex gap-[20px] py-[16px] px-[8px] border-y-[#e6e9ed] border-y"
-                                        >
-                                          <div className="max-w-[144px] w-full">
-                                            <div className="text-[13px] text-[#404040] font-[600]">
-                                              {/* created at */}
-                                              at{" "}
-                                              {formatTimeRange(
-                                                entry.start_time,
-                                                entry.end_time
-                                              )}
-                                            </div>
-                                            {/* less than a minute */}
-                                            <div className="text-[#acb3bb] text-[11px]">
-                                              {formatDuration(entry.duration)}
-                                            </div>
-                                          </div>
-                                          <div className="w-full">
-                                            <div className="text-[#303030] text-[17px]">
-                                              {entry.task_name === ""
-                                                ? "Unnamed Activity"
-                                                : entry.task_name}
-                                            </div>
-                                            <div className="w-full text-[#acb3bb] text-[11px]">
-                                              {entry.project_name}
-                                            </div>
-                                          </div>
-                                          <div className="w-full max-w-[336px] flex gap-[30px]">
-                                            <div className="max-w-[125px] w-full">
-                                              <div className="text-[13px]">
-                                                0 keyboard hits
-                                              </div>
-                                              <div className="w-full text-[#acb3bb] text-[11px]">
-                                                0 mouseclicks
-                                              </div>
-                                            </div>
-                                            {/* Web Tracker Activity */}
-                                            <div className="max-w-[172px] w-full flex">
-                                              <div className="max-w-[42px] w-full">
-                                                {/* Activity Msg */}
-                                                <ActivityMsg />
-                                              </div>
-                                              <div className="text-[11px] text-[#acb3bb] w-full flex items-center">
-                                                Web Tracker Activity
-                                              </div>
-                                              <div
-                                                className="flex items-center text-[20px] cursor-pointer"
-                                                onClick={() =>
-                                                  handleAction(entry._id)
-                                                }
-                                              >
-                                                ...
-                                              </div>
-                                              {active === entry._id && (
-                                                <div
-                                                  className="absolute mt-[40px] max-w-[200px] w-full p-[8px] bg-white rounded-md shadow-lg z-20"
-                                                  ref={actionRef}
-                                                >
-                                                  <ul className="py-1">
-                                                    <button
-                                                      onClick={() =>
-                                                        handleUpdate(entry._id)
-                                                      }
-                                                      className="w-full text-gray-700 px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer items-start flex"
-                                                    >
-                                                      Edit
-                                                    </button>
-                                                    <button
-                                                      onClick={() =>
-                                                        handleDelete(entry._id)
-                                                      }
-                                                      className="text-red-600 w-full px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer items-start flex"
-                                                    >
-                                                      Delete
-                                                    </button>
-                                                  </ul>
-                                                </div>
-                                              )}
-                                            </div>
-                                          </div>
-                                        </li>
-                                      );
-                                    })
-                                  )}
-                                </div>
-                              </ul>
-                            </div>
-                          );
-                        })
-                    ) : (
-                      <div className="pb-[20px]">No projects selected.</div>
-                    )}
+                  <div className="max-w-[448px] w-full text-center">
+                    <p className="mt-[20px]">
+                      You don’t have any activities yet. TopTracker desktop
+                      application or use Web Tracker to start tracking your work
+                      immediately.
+                    </p>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className=" bg-white rounded-lg shadow-md">
+                  <div className="block w-full">
+                    <ul className="flex justify-between text-[14px] pl-[10px] text-gray-400 mt-[40px] border-[#e6e9ed]">
+                      {/* Aug 21Tracked 1 minute content */}
+                    </ul>
+                    {/* entries with respect to selected project */}
+
+                    <div className="px-4 pt-4 bg-white rounded-lg shadow-md ">
+                      {selectedProjects.length > 0 ? (
+                        filteredProject
+                          ?.filter((project) => project?.activities?.length > 0)
+                          .map((project, index) => {
+                            return (
+                              <div key={index} className="mb-4">
+                                <h2>{project.name}</h2>
+                                <ul className="flex flex-col gap-[3px]">
+                                  <div>{formatDate(project.date)}</div>
+                                  <div>
+                                    {project?.activities?.map((items) =>
+                                      Object.values(items).map(
+                                        (entry, index) => {
+                                          return (
+                                            <li
+                                              key={index}
+                                              className="text-gray-600 flex gap-[20px] py-[16px] px-[8px] border-y-[#e6e9ed] border-y"
+                                            >
+                                              <div className="max-w-[144px] w-full">
+                                                <div className="text-[13px] text-[#404040] font-[600]">
+                                                  {/* created at */}
+                                                  at{" "}
+                                                  {formatTimeRange(
+                                                    entry.start_time,
+                                                    entry.end_time
+                                                  )}
+                                                </div>
+                                                {/* less than a minute */}
+                                                <div className="text-[#acb3bb] text-[11px]">
+                                                  {formatDuration(
+                                                    entry.duration
+                                                  )}
+                                                </div>
+                                              </div>
+                                              <div className="w-full">
+                                                <div className="text-[#303030] text-[17px]">
+                                                  {entry.task_name === ""
+                                                    ? "Unnamed Activity"
+                                                    : entry.task_name}
+                                                </div>
+                                                <div className="w-full text-[#acb3bb] text-[11px]">
+                                                  {entry.project_name}
+                                                </div>
+                                              </div>
+                                              <div className="w-full max-w-[336px] flex gap-[30px]">
+                                                <div className="max-w-[125px] w-full">
+                                                  <div className="text-[13px]">
+                                                    0 keyboard hits
+                                                  </div>
+                                                  <div className="w-full text-[#acb3bb] text-[11px]">
+                                                    0 mouseclicks
+                                                  </div>
+                                                </div>
+                                                {/* Web Tracker Activity */}
+                                                <div className="max-w-[172px] w-full flex">
+                                                  <div className="max-w-[42px] w-full">
+                                                    {/* Activity Msg */}
+                                                    <ActivityMsg />
+                                                  </div>
+                                                  <div className="text-[11px] text-[#acb3bb] w-full flex items-center">
+                                                    Web Tracker Activity
+                                                  </div>
+                                                  <div
+                                                    className="flex items-center text-[20px] cursor-pointer"
+                                                    onClick={() =>
+                                                      handleAction(entry._id)
+                                                    }
+                                                  >
+                                                    ...
+                                                  </div>
+                                                  {active === entry._id && (
+                                                    <div
+                                                      className="absolute mt-[40px] max-w-[200px] w-full p-[8px] bg-white rounded-md shadow-lg z-20"
+                                                      ref={actionRef}
+                                                    >
+                                                      <ul className="py-1">
+                                                        <button
+                                                          onClick={() =>
+                                                            handleUpdate(
+                                                              entry._id
+                                                            )
+                                                          }
+                                                          className="w-full text-gray-700 px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer items-start flex"
+                                                        >
+                                                          Edit
+                                                        </button>
+                                                        <button
+                                                          onClick={() =>
+                                                            handleDelete(
+                                                              entry._id
+                                                            )
+                                                          }
+                                                          className="text-red-600 w-full px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer items-start flex"
+                                                        >
+                                                          Delete
+                                                        </button>
+                                                      </ul>
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              </div>
+                                            </li>
+                                          );
+                                        }
+                                      )
+                                    )}
+                                  </div>
+                                </ul>
+                              </div>
+                            );
+                          })
+                      ) : (
+                        <div className="pb-[20px]">No projects selected.</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </>
