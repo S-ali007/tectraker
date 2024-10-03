@@ -230,6 +230,7 @@ function ProjectListPage() {
             yes={handleConfirmArchive}
             no={() => setActionArchive(false)}
             action={"archive"}
+            loading={loading}
           />
         )}
         {actionDelete && (
@@ -241,6 +242,7 @@ function ProjectListPage() {
             yes={handleDeleteProject}
             no={() => setActionDelete(false)}
             action={"delete"}
+            loading={loading}
           />
         )}
 

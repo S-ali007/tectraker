@@ -1,4 +1,4 @@
-function YesAndNo({ heading, para, yes, no ,action }) {
+function YesAndNo({ heading, para, yes, no ,action ,loading}) {
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-800 bg-opacity-50">
       <div className="bg-white rounded-lg shadow-lg max-w-md w-full">
@@ -22,6 +22,7 @@ function YesAndNo({ heading, para, yes, no ,action }) {
             No
           </button>
           <button
+          disabled={loading}
             onClick={yes}
             className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded"
           >

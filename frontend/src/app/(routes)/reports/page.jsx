@@ -34,7 +34,7 @@ function Page() {
     (state) => state.project
   );
   const tab = searchParams.get("chart");
-  
+
   const updatedQueryParams = new URLSearchParams(searchParams);
   const allProjects = updatedQueryParams.get("projects");
 
@@ -251,7 +251,12 @@ function Page() {
   }, [projects, dispatch]);
 
   if (loading) {
-    return <div className="text-center">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen  w-full flex-col ">
+        <img src="/loserr.gif" alt="Loading..." className="w-16 h-16" />
+        Loading...
+      </div>
+    );
   }
 
   return (
