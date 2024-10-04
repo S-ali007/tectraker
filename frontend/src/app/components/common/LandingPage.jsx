@@ -387,7 +387,7 @@ function LandingPage() {
                 <li className="hover:text-blue-300 cursor-pointer">FAQ</li>
                 <li
                   className="hover:text-blue-300 cursor-pointer"
-                  onClick={() => console.log("Sign Out clicked")}
+                  onClick={() => handleLogout()}
                 >
                   Sign Out
                 </li>
