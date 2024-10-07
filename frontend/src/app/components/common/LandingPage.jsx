@@ -27,6 +27,7 @@ function LandingPage() {
     setCurrentRole(role);
     setIsDropdownOpen(false);
     localStorage.setItem("userId", role);
+    toast.success(`${role} profile has been activated`);
   };
 
   const availableRoles = [
@@ -419,7 +420,19 @@ function LandingPage() {
             Download Free App
           </button>
         )}
-        <ToastContainer />
+        <ToastContainer
+          
+          position="top-center"
+          autoClose={5000}
+          hideProgressBar
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="colored"
+        />
       </div>
     </>
   );
