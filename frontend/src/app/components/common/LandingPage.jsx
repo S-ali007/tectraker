@@ -14,7 +14,10 @@ function LandingPage() {
   const [storedToken, setStoredToken] = useState(null);
   const { runningProjectId } = useSelector((state) => state.time);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [currentRole, setCurrentRole] = useState("Freelancer");
+
+  const [currentRole, setCurrentRole] = useState(
+    localStorage.getItem("userId") || "Freelancer"
+  );
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -23,12 +26,14 @@ function LandingPage() {
   const handleRoleSelect = (role) => {
     setCurrentRole(role);
     setIsDropdownOpen(false);
+    localStorage.setItem("userId", role);
   };
 
   const availableRoles = [
     { label: "Freelancer", bgColor: "bg-[#3096ff]" },
     { label: "Client", bgColor: "bg-[#00c386]" },
   ].filter((role) => role.label !== currentRole);
+
   const token = Cookies.get("accessToken");
   const path = usePathname();
   const today = Date.now();
@@ -36,11 +41,13 @@ function LandingPage() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
+      const currentUserRole = localStorage.setItem("userId", currentRole);
       const startQuery = localStorage.getItem("startQuery");
       const endQuery = localStorage.getItem("endQuery");
       const storedProject = localStorage.getItem("runningProjectId");
+      const userId = localStorage.getItem("userId");
       const token = Cookies.get("accessToken");
-
+      setCurrentRole(userId);
       setStoredStartQuery(startQuery);
       setStoredEndQuery(endQuery);
       setRunningProjectId(storedProject);
@@ -57,6 +64,7 @@ function LandingPage() {
     {
       id: 0,
       title: "Projects",
+      userId: "Client",
       link: "/projects?tab=active&sortBy=name&sortOrder=asc",
       svg: (
         <svg width="25" height="23" viewBox="0 0 28 23" fill="none">
@@ -83,6 +91,8 @@ function LandingPage() {
     {
       id: 1,
       title: "Reports",
+      userId: "Client",
+
       link: `/reports?start=${storedStartQuery ? storedEndQuery : today}&end=${
         storedEndQuery ? storedEndQuery : today
       }&projects=all&chart=projects&table=work-summary&grouping=projects`,
@@ -202,6 +212,7 @@ function LandingPage() {
       id: 4,
       title: "Invoices",
       link: "/invoices",
+      userId: "Client",
       svg: (
         <svg
           width="25"
@@ -247,13 +258,18 @@ function LandingPage() {
       ),
     },
   ];
-
   const handleLogout = () => {
     localStorage?.removeItem("userData");
+    localStorage?.removeItem("userId");
     document.cookie = "accessToken=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
 
     router.push("/login");
   };
+
+  const filteredData =
+    currentRole === "Client"
+      ? maindata.filter((item) => item.userId === "Client")
+      : maindata;
 
   return (
     <>
@@ -271,7 +287,7 @@ function LandingPage() {
           </h1>
         </Link>
         <div className="flex flex-col gap-[10px]">
-          {maindata.map((item) => {
+          {filteredData.map((item) => {
             const currentPath = path.split("t")[0];
             const linkPath = item.link.split("t")[0];
 
@@ -284,12 +300,14 @@ function LandingPage() {
             }`;
 
             return (
-              <Link key={item.id} href={item.link} className={linkClass}>
-                <div>{item.svg}</div>
-                <h1 className="text-white text-[13px] leading-[15px] capitalize">
-                  {item.title}
-                </h1>
-              </Link>
+              <>
+                <Link key={item.id} href={item.link} className={linkClass}>
+                  <div>{item.svg}</div>
+                  <h1 className="text-white text-[13px] leading-[15px] capitalize">
+                    {item.title}
+                  </h1>
+                </Link>
+              </>
             );
           })}
         </div>
@@ -396,9 +414,11 @@ function LandingPage() {
           </div>
         </div>
         {/* Download Button */}
-        <button className="text-[#fff] text-[13px] rounded-[4px] border-[#00c386] bg-[#00c386] hover:scale-105 font-proximaNova hover:opacity-90 transition-all duration-100 ease-linear max-w-[182px] py-[10px] w-full mx-auto">
-          Download Free App
-        </button>
+        {currentRole === "Freelancer" && (
+          <button className="text-[#fff] text-[13px] rounded-[4px] border-[#00c386] bg-[#00c386] hover:scale-105 font-proximaNova hover:opacity-90 transition-all duration-100 ease-linear max-w-[182px] py-[10px] w-full mx-auto">
+            Download Free App
+          </button>
+        )}
         <ToastContainer />
       </div>
     </>
