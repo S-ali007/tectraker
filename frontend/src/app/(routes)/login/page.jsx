@@ -32,6 +32,7 @@ export default function LoginPage() {
         console.log(res.data.data);
         const { user, accessToken } = res.data.data;
         localStorage.setItem("user", user.username);
+        localStorage.setItem("userId", "Freelancer");
         dispatch(login({ user: user.username, token: accessToken }));
         Cookies.set("accessToken", accessToken);
 

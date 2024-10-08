@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 import Cookies from "js-cookie";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -19,13 +19,7 @@ function LandingPage() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { user } = useSelector((state) => state.auth);
 
-  const [currentRole, setCurrentRole] = useState(
-    `${
-      typeof window !== "undefined"
-        ? localStorage.getItem("userId")
-        : "Freelancer"
-    }`
-  );
+  const [currentRole, setCurrentRole] = useState("Freelancer");
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -50,7 +44,6 @@ function LandingPage() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const currentUserRole = localStorage.setItem("userId", currentRole);
       const startQuery = localStorage.getItem("startQuery");
       const endQuery = localStorage.getItem("endQuery");
       const storedProject = localStorage.getItem("runningProjectId");
@@ -59,7 +52,7 @@ function LandingPage() {
       const token = Cookies.get("accessToken");
       const userId = localStorage.getItem("userId");
 
-      setCurrentRole(userId || currentUserRole);
+      setCurrentRole(userId);
       setStoredStartQuery(startQuery);
       setStoredEndQuery(endQuery);
       setRunningProjectId(storedProject);
@@ -279,6 +272,7 @@ function LandingPage() {
   const handleLogout = () => {
     localStorage?.removeItem("userData");
     localStorage?.removeItem("userId");
+    localStorage?.removeItem("user");
     document.cookie = "accessToken=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
 
     router.push("/login");
