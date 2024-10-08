@@ -355,10 +355,10 @@ function LandingPage() {
               <div className="flex flex-col">
                 <span className="text-white text-[13px]">{user}</span>
                 <span
-                  className={`text-[#fff] px-[13px] py-[.106rem] rounded-[.312rem]   w-full text-[11px] flex items-center justify-center ${
+                  className={`text-[#fff] px-[18px] py-[.106rem] rounded-[.312rem]   w-full text-[11px] flex items-center justify-center ${
                     currentRole === "Freelancer"
                       ? "bg-[#3096ff] max-w-[61px]"
-                      : "bg-[#00c386] px-[3px] max-w-[46px]"
+                      : "bg-[#00c386]  max-w-[46px]"
                   }`}
                 >
                   {currentRole}
