@@ -29,8 +29,10 @@ export default function LoginPage() {
       const res = await api.post("/api/v1/users/login", user);
 
       if (res?.data?.data?.user?.isVerified === true) {
+        console.log(res.data.data);
         const { user, accessToken } = res.data.data;
-        dispatch(login({ user, token: accessToken }));
+        localStorage.setItem("user", user.username);
+        dispatch(login({ user: user.username, token: accessToken }));
         Cookies.set("accessToken", accessToken);
 
         toast.success("Login success");

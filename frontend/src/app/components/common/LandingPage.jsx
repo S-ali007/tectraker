@@ -1,19 +1,23 @@
 "use client";
+import { login } from "@/app/features/authSlice";
+import { useDispatch, useSelector } from "react-redux";
+
 import Cookies from "js-cookie";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 function LandingPage() {
+  const dispatch = useDispatch();
   const [storedStartQuery, setStoredStartQuery] = useState(null);
   const [storedEndQuery, setStoredEndQuery] = useState(null);
   const [storedrunningProjectId, setRunningProjectId] = useState(null);
   const [storedToken, setStoredToken] = useState(null);
   const { runningProjectId } = useSelector((state) => state.time);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const { user } = useSelector((state) => state.auth);
 
   const [currentRole, setCurrentRole] = useState(
     `${
@@ -50,15 +54,24 @@ function LandingPage() {
       const startQuery = localStorage.getItem("startQuery");
       const endQuery = localStorage.getItem("endQuery");
       const storedProject = localStorage.getItem("runningProjectId");
-      const userId = localStorage.getItem("userId");
+      const user = localStorage.getItem("user");
+      dispatch(login({ user }));
       const token = Cookies.get("accessToken");
+      const userId = localStorage.getItem("userId");
+
       setCurrentRole(userId || currentUserRole);
       setStoredStartQuery(startQuery);
       setStoredEndQuery(endQuery);
       setRunningProjectId(storedProject);
       setStoredToken(token);
     }
-  }, [storedrunningProjectId, runningProjectId, storedToken, currentRole]);
+  }, [
+    storedrunningProjectId,
+    runningProjectId,
+    storedToken,
+    currentRole,
+    user,
+  ]);
   if (!token && !storedToken) {
     return null;
   }
@@ -346,9 +359,9 @@ function LandingPage() {
             >
               <div className="w-[38px] h-10 bg-gray-200 rounded-full"></div>
               <div className="flex flex-col">
-                <span className="text-white text-[13px]">prince ooseven</span>
+                <span className="text-white text-[13px]">{user}</span>
                 <span
-                  className={`text-[#fff] py-[.106rem] rounded-[.312rem]   w-full text-[11px] flex items-center justify-center ${
+                  className={`text-[#fff] px-[13px] py-[.106rem] rounded-[.312rem]   w-full text-[11px] flex items-center justify-center ${
                     currentRole === "Freelancer"
                       ? "bg-[#3096ff] max-w-[61px]"
                       : "bg-[#00c386] px-[3px] max-w-[46px]"
@@ -383,9 +396,7 @@ function LandingPage() {
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
                     <div className="flex flex-col">
-                      <span className="text-white text-[13px]">
-                        prince ooseven
-                      </span>
+                      <span className="text-white text-[13px]">{user}</span>
                       <span
                         className={`text-[#fff] py-[.106rem] rounded-[.312rem] px-[.31rem]  w-full ${
                           role.bgColor

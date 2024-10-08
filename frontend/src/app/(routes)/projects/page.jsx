@@ -30,7 +30,7 @@ function ProjectListPage() {
   const { projects, archiveProjects } = useSelector((state) => state.project);
   const actionRef = useRef(null);
   const [loading, setLoading] = useState(false);
-
+  
   const handleSort = (field) => {
     const newSortOrder =
       sortBy === field && sortOrder === "asc" ? "desc" : "asc";

@@ -14,7 +14,7 @@ const DropdownDatePicker = ({
   const [endDate, setEndDate] = useState(initialEndDate);
   const today = new Date();
   const storedStartQuery = localStorage?.getItem("startQuery");
-  const [day, month, year] = storedStartQuery.split("/").map(Number);
+  const [day, month, year] = storedStartQuery?.split("/").map(Number);
   const parsedDate = new Date(year, month - 1, day);
   const handleCustomRange = (rangeType) => {
     switch (rangeType) {
