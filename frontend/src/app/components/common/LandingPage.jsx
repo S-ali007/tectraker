@@ -373,7 +373,7 @@ function LandingPage() {
               {availableRoles.map((role) => (
                 <div
                   key={role.label}
-                  className="py-2 border-y-gray-400 border-y-[1px] cursor-pointer"
+                  className="py-2 border-y-gray-400 border-y-[1px] cursor-pointer opacity-[0.30]"
                   onClick={() => handleRoleSelect(role.label)}
                 >
                   <div className="flex items-center space-x-3">
@@ -421,9 +421,8 @@ function LandingPage() {
           </button>
         )}
         <ToastContainer
-          
           position="top-center"
-          autoClose={5000}
+          autoClose={500}
           hideProgressBar
           newestOnTop={false}
           closeOnClick

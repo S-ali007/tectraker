@@ -121,6 +121,7 @@ const addTeamMembers = asyncHandler(async (req, res) => {
         new ApiResponse(200, { project }, "Team Members added successfully")
       );
   } catch (error) {
+    console.log(error)
     if (error.code === 11000) {
       res
         .status(400)
