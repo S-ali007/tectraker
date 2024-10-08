@@ -505,7 +505,9 @@ function ProjectListPage() {
         )}
         {projects.length === 0 && tab == "active" && (
           <div className="w-full flex flex-col items-center justify-center h-[75vh]">
-            <ActiveProjects />
+            <div onClick={handleCreateNew}>
+              <ActiveProjects />
+            </div>
 
             <div className="max-w-[448px] w-full text-center">
               <h1 className="mt-[80px] text-[16px] leading-[24px] font-[700] text-[#575757]">
