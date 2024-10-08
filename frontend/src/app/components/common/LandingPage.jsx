@@ -15,9 +15,7 @@ function LandingPage() {
   const { runningProjectId } = useSelector((state) => state.time);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const [currentRole, setCurrentRole] = useState(
-    localStorage.getItem("userId") || "Freelancer"
-  );
+  const [currentRole, setCurrentRole] = useState("Freelancer");
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -48,13 +46,13 @@ function LandingPage() {
       const storedProject = localStorage.getItem("runningProjectId");
       const userId = localStorage.getItem("userId");
       const token = Cookies.get("accessToken");
-      setCurrentRole(userId);
+      setCurrentRole(userId || currentUserRole);
       setStoredStartQuery(startQuery);
       setStoredEndQuery(endQuery);
       setRunningProjectId(storedProject);
       setStoredToken(token);
     }
-  }, [storedrunningProjectId, runningProjectId, storedToken]);
+  }, [storedrunningProjectId, runningProjectId, storedToken, currentRole]);
   if (!token && !storedToken) {
     return null;
   }
