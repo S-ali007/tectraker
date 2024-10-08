@@ -15,7 +15,13 @@ function LandingPage() {
   const { runningProjectId } = useSelector((state) => state.time);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const [currentRole, setCurrentRole] = useState("Freelancer");
+  const [currentRole, setCurrentRole] = useState(
+    `${
+      typeof window !== "undefined"
+        ? localStorage.getItem("userId")
+        : "Freelancer"
+    }`
+  );
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
