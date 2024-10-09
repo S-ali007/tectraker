@@ -91,11 +91,13 @@ const addTeamMembers = asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { teamMembers } = req.body;
     const loggedInUserEmail = req.user.email;
-    const project = await Project.findById(id);
+
+    const project = await Project.findById(id).populate("teamMembers");
 
     if (!project) {
       return res.status(404).json(new ApiError(404, "Project not found"));
     }
+
     const filteredTeamMembers = teamMembers.filter(
       (member) => member.email !== loggedInUserEmail
     );
@@ -107,8 +109,27 @@ const addTeamMembers = asyncHandler(async (req, res) => {
           new ApiError(400, {}, "You can't invite yourself to your projects.")
         );
     }
+
+    // Check for duplicate emails in the same project
+    const existingEmails = project.teamMembers.map((member) => member.email);
+    const duplicateEmails = filteredTeamMembers.filter((member) =>
+      existingEmails.includes(member.email)
+    );
+
+    if (duplicateEmails.length > 0) {
+      return res
+        .status(400)
+        .json(
+          new ApiError(
+            400,
+            {},
+            "Duplicate team member detected in the project."
+          )
+        );
+    }
+
     const newTeamMembers = await Team.insertMany(
-      teamMembers.map((member) => ({ ...member, project_id: id }))
+      filteredTeamMembers.map((member) => ({ ...member, project_id: id }))
     );
 
     project.teamMembers.push(...newTeamMembers.map((member) => member._id));
@@ -121,14 +142,8 @@ const addTeamMembers = asyncHandler(async (req, res) => {
         new ApiResponse(200, { project }, "Team Members added successfully")
       );
   } catch (error) {
-    console.log(error)
-    if (error.code === 11000) {
-      res
-        .status(400)
-        .json(new ApiError(400, {}, "Duplicate team member detected"));
-    } else {
-      res.status(500).json(new ApiError(500, "Server error"));
-    }
+    console.log(error);
+    res.status(500).json(new ApiError(500, "Server error"));
   }
 });
 
