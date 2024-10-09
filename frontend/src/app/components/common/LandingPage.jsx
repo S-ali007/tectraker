@@ -282,7 +282,9 @@ function LandingPage() {
     currentRole === "Client"
       ? maindata.filter((item) => item.userId === "Client")
       : maindata;
-
+      const firstLetter = user
+      ? user.charAt(0).toUpperCase()
+      : "";
   return (
     <>
       <div className="pl-[230px]"></div>
@@ -351,7 +353,9 @@ function LandingPage() {
               className="flex items-center pb-2 space-x-3 cursor-pointer"
               onClick={toggleDropdown}
             >
-              <div className="w-[38px] h-10 bg-gray-200 rounded-full"></div>
+              <div className="w-[38px] h-10 bg-gray-200 rounded-full items-center flex justify-center font-[900] text-[22px] text-[#5782af]">
+                {firstLetter}
+              </div>
               <div className="flex flex-col">
                 <span className="text-white text-[13px]">{user}</span>
                 <span
@@ -381,31 +385,35 @@ function LandingPage() {
               }`}
             >
               {/* Dropdown Options */}
-              {availableRoles.map((role) => (
-                <div
-                  key={role.label}
-                  className="py-2 border-y-gray-400 border-y-[1px] cursor-pointer opacity-[0.30]"
-                  onClick={() => handleRoleSelect(role.label)}
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
-                    <div className="flex flex-col">
-                      <span className="text-white text-[13px]">{user}</span>
-                      <span
-                        className={`text-[#fff] py-[.106rem] rounded-[.312rem] px-[.31rem]  w-full ${
-                          role.bgColor
-                        } ${
-                          currentRole === "Freelancer"
-                            ? "max-w-[31px] px-[20px] "
-                            : "max-w-[61px] "
-                        } text-[11px]  flex items-center justify-center`}
-                      >
-                        {role.label}
-                      </span>
+              {availableRoles.map((role) => {
+                return (
+                  <div
+                    key={role.label}
+                    className="py-2 border-y-gray-400 border-y-[1px] cursor-pointer opacity-[0.30]"
+                    onClick={() => handleRoleSelect(role.label)}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gray-200 rounded-full items-center flex justify-center font-[900] text-[22px] text-[#5782af]">
+                        {firstLetter}
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-white text-[13px]">{user}</span>
+                        <span
+                          className={`text-[#fff] py-[.106rem] rounded-[.312rem] px-[.31rem]  w-full ${
+                            role.bgColor
+                          } ${
+                            currentRole === "Freelancer"
+                              ? "max-w-[31px] px-[20px] "
+                              : "max-w-[61px] "
+                          } text-[11px]  flex items-center justify-center`}
+                        >
+                          {role.label}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
 
               {/* Navigation Links */}
               <ul className="space-y-4 text-white text-[13px] mt-[26px]">
