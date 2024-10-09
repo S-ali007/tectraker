@@ -282,9 +282,7 @@ function LandingPage() {
     currentRole === "Client"
       ? maindata.filter((item) => item.userId === "Client")
       : maindata;
-      const firstLetter = user
-      ? user.charAt(0).toUpperCase()
-      : "";
+  const firstLetter = user ? user.charAt(0).toUpperCase() : "";
   return (
     <>
       <div className="pl-[230px]"></div>
@@ -325,118 +323,123 @@ function LandingPage() {
             );
           })}
         </div>
-        <div
-          className={`max-w-[182px] w-full mx-auto text-[#fff] p-[16px] leading-[1.32] bg-[#2f5489] mt-auto ${
-            isDropdownOpen
-              ? "max-h-0 opacity-0 scale-0 transition-all duration-300 ease-linear"
-              : "transition-all duration-300 ease-linear  scale-[100%] "
-          }`}
-        >
-          <h3 className="text-[14px]">Connect HireGlobal Payments</h3>
-          <p className="text-[12px] my-[16px]">
-            HireGlobal by Toptal is a secure payroll, compliance, and HRIS
-            offering that is built upon Toptal’s robust payroll and payments
-            infrastructure – which has been refined over a decade.
-          </p>
-        </div>
-        <div
-          className={` px-[22px]  transition-all overflow-hidden ${
-            isDropdownOpen
-              ? "bg-[#30558d] border-l-[5px] border-l-[#35bf8a] transition-[border-left-width,border-left-color] duration-200 pt-[10px]"
-              : "border-l-[0px] border-l-transparent transition-[border-left-width,border-left-color,background-left-height] ease-linear duration-200"
-          }`}
-        >
-          {/* User Info */}
-          <div className="mb-4">
-            {/* Dropdown Content */}
-            <div
-              className="flex items-center pb-2 space-x-3 cursor-pointer"
-              onClick={toggleDropdown}
-            >
-              <div className="w-[38px] h-10 bg-gray-200 rounded-full items-center flex justify-center font-[900] text-[22px] text-[#5782af]">
-                {firstLetter}
-              </div>
-              <div className="flex flex-col">
-                <span className="text-white text-[13px]">{user}</span>
-                <span
-                  className={`text-[#fff] px-[18px] py-[.106rem] rounded-[.312rem]   w-full text-[11px] flex items-center justify-center ${
-                    currentRole === "Freelancer"
-                      ? "bg-[#3096ff] max-w-[61px]"
-                      : "bg-[#00c386]  max-w-[46px]"
+
+        <div className="flex justify-center flex-col mt-auto ">
+          <div
+            className={`max-w-[182px] w-full mx-auto text-[#fff] p-[16px] leading-[1.32] bg-[#2f5489] ${
+              isDropdownOpen
+                ? "max-h-0 opacity-0 scale-0 transition-all duration-300 ease-linear"
+                : "transition-all duration-300 ease-linear  scale-[100%] "
+            }`}
+          >
+            <h3 className="text-[14px]">Connect HireGlobal Payments</h3>
+            <p className="text-[12px] my-[16px]">
+              HireGlobal by Toptal is a secure payroll, compliance, and HRIS
+              offering that is built upon Toptal’s robust payroll and payments
+              infrastructure – which has been refined over a decade.
+            </p>
+          </div>
+
+          <div
+            className={` px-[22px]  transition-all overflow-hidden ${
+              isDropdownOpen
+                ? "bg-[#30558d] border-l-[5px] border-l-[#35bf8a] transition-[border-left-width,border-left-color] duration-200 pt-[10px]"
+                : "border-l-[0px] border-l-transparent transition-[border-left-width,border-left-color,background-left-height] ease-linear duration-200"
+            }`}
+          >
+            {/* User Info */}
+            <div className="mb-4 mt-[16px]">
+              {/* Dropdown Content */}
+              <div
+                className="flex items-center pb-2 space-x-3 cursor-pointer"
+                onClick={toggleDropdown}
+              >
+                <div className="w-[38px] h-10 bg-gray-200 rounded-full items-center flex justify-center font-[900] text-[22px] text-[#5782af]">
+                  {firstLetter}
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-white text-[13px]">{user}</span>
+                  <span
+                    className={`text-[#fff] px-[18px] py-[.106rem] rounded-[.312rem]   w-full text-[11px] flex items-center justify-center ${
+                      currentRole === "Freelancer"
+                        ? "bg-[#3096ff] max-w-[61px]"
+                        : "bg-[#00c386]  max-w-[46px]"
+                    }`}
+                  >
+                    {currentRole}
+                  </span>
+                </div>
+                <div
+                  className={`text-white ml-auto transition-transform duration-300 ${
+                    isDropdownOpen ? "rotate-180" : "rotate-0"
                   }`}
                 >
-                  {currentRole}
-                </span>
+                  ▾
+                </div>
               </div>
+
               <div
-                className={`text-white ml-auto transition-transform duration-300 ${
-                  isDropdownOpen ? "rotate-180" : "rotate-0"
+                className={`overflow-hidden transition-[max-height,opacity] duration-300 ease-linear ${
+                  isDropdownOpen
+                    ? "max-h-[300px] opacity-100"
+                    : "max-h-0 opacity-0"
                 }`}
               >
-                ▾
-              </div>
-            </div>
-
-            <div
-              className={`overflow-hidden transition-[max-height,opacity] duration-300 ease-linear ${
-                isDropdownOpen
-                  ? "max-h-[300px] opacity-100"
-                  : "max-h-0 opacity-0"
-              }`}
-            >
-              {/* Dropdown Options */}
-              {availableRoles.map((role) => {
-                return (
-                  <div
-                    key={role.label}
-                    className="py-2 border-y-gray-400 border-y-[1px] cursor-pointer opacity-[0.30]"
-                    onClick={() => handleRoleSelect(role.label)}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gray-200 rounded-full items-center flex justify-center font-[900] text-[22px] text-[#5782af]">
-                        {firstLetter}
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-white text-[13px]">{user}</span>
-                        <span
-                          className={`text-[#fff] py-[.106rem] rounded-[.312rem] px-[.31rem]  w-full ${
-                            role.bgColor
-                          } ${
-                            currentRole === "Freelancer"
-                              ? "max-w-[31px] px-[20px] "
-                              : "max-w-[61px] "
-                          } text-[11px]  flex items-center justify-center`}
-                        >
-                          {role.label}
-                        </span>
+                {/* Dropdown Options */}
+                {availableRoles.map((role) => {
+                  return (
+                    <div
+                      key={role.label}
+                      className="py-2 border-y-gray-400 border-y-[1px] cursor-pointer opacity-[0.30]"
+                      onClick={() => handleRoleSelect(role.label)}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gray-200 rounded-full items-center flex justify-center font-[900] text-[22px] text-[#5782af]">
+                          {firstLetter}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-white text-[13px]">{user}</span>
+                          <span
+                            className={`text-[#fff] py-[.106rem] rounded-[.312rem] px-[.31rem]  w-full ${
+                              role.bgColor
+                            } ${
+                              currentRole === "Freelancer"
+                                ? "max-w-[31px] px-[20px] "
+                                : "max-w-[61px] "
+                            } text-[11px]  flex items-center justify-center`}
+                          >
+                            {role.label}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
 
-              {/* Navigation Links */}
-              <ul className="space-y-4 text-white text-[13px] mt-[26px]">
-                <li className="hover:text-blue-300 cursor-pointer">
-                  Account Settings
-                </li>
-                <li className="hover:text-blue-300 cursor-pointer">FAQ</li>
-                <li
-                  className="hover:text-blue-300 cursor-pointer"
-                  onClick={() => handleLogout()}
-                >
-                  Sign Out
-                </li>
-              </ul>
+                {/* Navigation Links */}
+                <ul className="space-y-4 text-white text-[13px] mt-[26px]">
+                  <li className="hover:text-blue-300 cursor-pointer">
+                    Account Settings
+                  </li>
+                  <li className="hover:text-blue-300 cursor-pointer">FAQ</li>
+                  <li
+                    className="hover:text-blue-300 cursor-pointer"
+                    onClick={() => handleLogout()}
+                  >
+                    Sign Out
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
+          {/* Download Button */}
+          {currentRole === "Freelancer" && (
+            <button className="text-[#fff] text-[13px] rounded-[4px] border-[#00c386] bg-[#00c386] hover:scale-105 font-proximaNova hover:opacity-90 transition-all duration-100 ease-linear max-w-[182px] py-[10px] w-full mx-auto">
+              Download Free App
+            </button>
+          )}
         </div>
-        {/* Download Button */}
-        {currentRole === "Freelancer" && (
-          <button className="text-[#fff] text-[13px] rounded-[4px] border-[#00c386] bg-[#00c386] hover:scale-105 font-proximaNova hover:opacity-90 transition-all duration-100 ease-linear max-w-[182px] py-[10px] w-full mx-auto">
-            Download Free App
-          </button>
-        )}
+
         <ToastContainer
           position="top-center"
           autoClose={500}
