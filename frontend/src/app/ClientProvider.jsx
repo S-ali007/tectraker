@@ -6,13 +6,16 @@ import { store } from "./store";
 
 import LandingPage from "./components/common/LandingPage";
 import ProtectedRoute from "./components/ProtectedRoutes";
+import { ThemeProvider } from "./components/ThemeProvider";
 
 const ClientProvider = ({ children }) => {
   return (
     <Provider store={store}>
       <ProtectedRoute>
-        <LandingPage />
-        <div className=" w-full flex">{children}</div>
+        <ThemeProvider>
+          <LandingPage />
+          <div className=" w-full flex">{children}</div>
+        </ThemeProvider>
       </ProtectedRoute>
     </Provider>
   );
